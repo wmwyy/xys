@@ -32,8 +32,8 @@ def svg_placeholder_data_url(kind: str, size: int = 256) -> str:
     b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
     return f"data:image/svg+xml;base64,{b64}"
 
-st.set_page_config(page_title="贪吃蛇 (Snake)", layout="centered")
-st.title("贪吃蛇 — Streamlit 内嵌 HTML 版本")
+st.set_page_config(page_title="贪吃蛇", layout="centered")
+st.title("贪吃蛇")
 
 missing_head = not IMG_HEAD.exists()
 missing_seed = not IMG_SEED.exists()
@@ -60,9 +60,6 @@ if 'head_data' not in locals():
 if 'seed_data' not in locals():
     seed_data = image_to_data_url(IMG_SEED)
 
-head_data = image_to_data_url(IMG_HEAD)
-seed_data = image_to_data_url(IMG_SEED)
-
 # Fixed gameplay parameters for a smoother experience
 speed = 5
 grid_size = 12
@@ -75,12 +72,13 @@ html = """
   <meta charset="utf-8" />
   <style>
     body {{ margin:0; padding:0; background: linear-gradient(180deg,#071016 0%, #0b1216 60%); color:#eef2f3; font-family: Inter, Arial, Helvetica, sans-serif; }}
-    #container {{ display:flex; align-items:center; justify-content:center; padding:18px; }}
+    #container {{ display:flex; align-items:flex-start; justify-content:center; padding:18px; gap:20px; }}
     canvas {{ background: linear-gradient(180deg,#132029,#0f1720); border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); }}
     #info {{ display:none; }}
-    /* scorecard */
-    #scorecard {{ position: fixed; left: 18px; top: 16px; background: rgba(0,0,0,0.45); color:#fff; padding:10px 14px; border-radius:10px; box-shadow: 0 6px 18px rgba(0,0,0,0.6); font-size:14px; }}
+    /* scorecard (placed left of canvas to avoid overlap) */
+    #scorecard {{ background: rgba(0,0,0,0.45); color:#fff; padding:12px 14px; border-radius:10px; box-shadow: 0 6px 18px rgba(0,0,0,0.6); font-size:14px; min-width:92px; }}
     #scorecard .label {{ color:#cbd5da; font-size:12px; }}
+    .game-area {{ flex: 1 1 auto; display:flex; align-items:flex-start; justify-content:center; }}
     /* mobile control styles */
     .controls {{ position: fixed; left: 50%; transform: translateX(-50%); bottom: 22px; display:flex; flex-direction:column; align-items:center; gap:18px; z-index:9999; }}
     .controls .hrow {{ display:flex; gap:36px; }}
@@ -90,12 +88,13 @@ html = """
 </head>
 <body>
   <div id="container">
-    <canvas id="game" width="{canvas_px}" height="{canvas_px}"></canvas>
-  </div>
-  <!-- scorecard -->
-  <div id="scorecard">
-    <div id="score-current">得分: 0</div>
-    <div id="score-best" class="label">最高: 0</div>
+    <div id="scorecard">
+      <div id="score-current">得分: 0</div>
+      <div id="score-best" class="label">最高: 0</div>
+    </div>
+    <div class="game-area">
+      <canvas id="game" width="{canvas_px}" height="{canvas_px}"></canvas>
+    </div>
   </div>
   <!-- control buttons: pause / reset -->
   <div id="scorebuttons" style="position: fixed; left: 18px; top: 80px; display:flex; gap:8px;">
@@ -263,22 +262,42 @@ function gameLoop() {{
   // 画食物（居中）
   ctx.drawImage(seedImg, food.x*tileSize, food.y*tileSize, tileSize, tileSize);
 
-  // 画蛇身体（圆形渐变段）
-  for (let i = snake.length-1; i >= 1; i--) {{
-    const s = snake[i];
-    const cx = s.x * tileSize + tileSize/2;
-    const cy = s.y * tileSize + tileSize/2;
-    const r = Math.max( (tileSize * 0.45), 4 );
-    const t = i / Math.max(1, snake.length);
-    const hue = 120 - t * 60; // green -> yellowish
-    const light = 30 + t * 30;
+  // 画蛇身体（圆角矩形段，渐变填充，更像真实蛇身）
+  function drawSegmentAt(cellX, cellY, t) {{
+    const x = cellX * tileSize;
+    const y = cellY * tileSize;
+    const w = tileSize * 0.88;
+    const h = tileSize * 0.7;
+    const rx = Math.max(4, tileSize * 0.12);
+    const cx = x + (tileSize - w) / 2;
+    const cy = y + (tileSize - h) / 2;
+    const hue = 120 - t * 60;
+    const light1 = 48 - t * 18;
+    const light2 = 30 - t * 10;
+    const grad = ctx.createLinearGradient(cx, cy, cx + w, cy + h);
+    grad.addColorStop(0, `hsl(${hue},70%,${light1}%)`);
+    grad.addColorStop(1, `hsl(${Math.max(0,hue-20)},60%,${Math.max(18,light2)}%)`);
     ctx.beginPath();
-    ctx.fillStyle = `hsl(${hue}, 60%, ${light}%)`;
-    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.moveTo(cx + rx, cy);
+    ctx.lineTo(cx + w - rx, cy);
+    ctx.quadraticCurveTo(cx + w, cy, cx + w, cy + rx);
+    ctx.lineTo(cx + w, cy + h - rx);
+    ctx.quadraticCurveTo(cx + w, cy + h, cx + w - rx, cy + h);
+    ctx.lineTo(cx + rx, cy + h);
+    ctx.quadraticCurveTo(cx, cy + h, cx, cy + h - rx);
+    ctx.lineTo(cx, cy + rx);
+    ctx.quadraticCurveTo(cx, cy, cx + rx, cy);
+    ctx.closePath();
+    ctx.fillStyle = grad;
     ctx.fill();
-    ctx.lineWidth = Math.max(1, tileSize*0.04);
+    ctx.lineWidth = Math.max(1, tileSize*0.03);
     ctx.strokeStyle = 'rgba(0,0,0,0.25)';
     ctx.stroke();
+  }}
+  for (let i = snake.length-1; i >= 1; i--) {{
+    const s = snake[i];
+    const t = i / Math.max(1, snake.length);
+    drawSegmentAt(s.x, s.y, t);
   }}
 
   // 画蛇头（图片，带方向）
