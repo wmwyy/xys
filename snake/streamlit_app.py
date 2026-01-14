@@ -84,9 +84,22 @@ html = """
     .controls .hrow {{ display:flex; gap:36px; }}
     .control-btn {{ width:64px; height:64px; border-radius:14px; background: rgba(255,255,255,0.04); color:#fff; border:1px solid rgba(255,255,255,0.06); font-size:24px; touch-action: none; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }}
     @media (min-width:700px) {{ .controls {{ display:none; }} }}
+    /* responsive: stack on small screens */
+    @media (max-width:700px) {{
+      #container {{ flex-direction:column; align-items:center; padding:12px; gap:12px; }}
+      .game-area {{ width:100%; }}
+      canvas {{ width: min(92vw, {canvas_px}px); height: auto; }}
+      #scorecard {{ position: relative; left:0; top:0; margin-bottom:8px; }}
+      #scorebuttons {{ position: relative; left:0; top:0; margin-top:8px; }}
+      .controls {{ position: static; transform:none; bottom:auto; left:auto; }}
+    }}
+    /* level HUD */
+    .level-hud {{ position: fixed; left:50%; top:14vh; transform:translateX(-50%) scale(0.8); background: rgba(20,30,34,0.88); color:#fff; padding:14px 22px; border-radius:12px; font-size:20px; box-shadow:0 12px 40px rgba(0,0,0,0.6); opacity:0; pointer-events:none; z-index:99999; transition:transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease; }}
+    .level-hud.show {{ opacity:1; transform:translateX(-50%) scale(1.06); }}
   </style>
 </head>
 <body>
+  <div id="level-hud" class="level-hud" aria-hidden="true">关卡 1</div>
   <div id="container">
     <div id="scorecard">
       <div id="score-current">得分: 0</div>
@@ -296,9 +309,29 @@ function gameLoop() {{
   if (head.x === food.x && head.y === food.y) {{
     tail += 1;
     score += 1;
+    eatenSinceLevel += 1;
+    // particles and feedback
+    spawnParticles(head.x*tileSize, head.y*tileSize, 14);
     if (score > bestScore) {{
       bestScore = score;
       localStorage.setItem('snake_best_score', bestScore);
+    }}
+    // level up check
+    if (eatenSinceLevel >= seedsToLevel) {{
+      level += 1;
+      eatenSinceLevel = 0;
+      seedsToLevel = Math.floor(seedsToLevel * 1.4) + 1;
+      // increase speed slightly
+      speed = Math.min(22, speed + 1);
+      startLoop();
+      // show HUD animation
+      const hud = document.getElementById('level-hud');
+      if (hud) {{
+        hud.innerText = '关卡 ' + level;
+        hud.classList.add('show');
+        hud.setAttribute('aria-hidden','false');
+        setTimeout(()=>{{ hud.classList.remove('show'); hud.setAttribute('aria-hidden','true'); }}, 1400);
+      }}
     }}
     food = spawnFood();
   }}
