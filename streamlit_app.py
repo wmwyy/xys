@@ -51,10 +51,10 @@ html = """
     #container {{ display:flex; align-items:center; justify-content:center; padding:10px; }}
     canvas {{ background:#222; border-radius:8px; box-shadow: 0 6px 24px rgba(0,0,0,0.6); }}
     #info {{ color:#ccc; font-size:14px; text-align:center; margin-top:8px; }}
-    /* mobile control styles */
-    .controls {{ position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; display:flex; flex-direction:column; align-items:center; gap:8px; z-index:9999; }}
-    .controls .hrow {{ display:flex; gap:8px; }}
-    .control-btn {{ width:56px; height:56px; border-radius:12px; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.08); font-size:22px; touch-action: none; }}
+    /* mobile control styles (increased spacing) */
+    .controls {{ position: fixed; left: 50%; transform: translateX(-50%); bottom: 22px; display:flex; flex-direction:column; align-items:center; gap:18px; z-index:9999; }}
+    .controls .hrow {{ display:flex; gap:36px; }}
+    .control-btn {{ width:64px; height:64px; border-radius:14px; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.08); font-size:24px; touch-action: none; }}
     @media (min-width:700px) {{ .controls {{ display:none; }} }}
   </style>
 </head>
