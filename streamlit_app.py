@@ -80,8 +80,8 @@ function resizeCanvasForDevice() {{
 resizeCanvasForDevice();
 window.addEventListener('resize', resizeCanvasForDevice);
 
-let snake = [ { x: Math.floor(tileCount/2), y: Math.floor(tileCount/2) } ];
-let velocity = { x: 1, y: 0 };
+let snake = [ {{ x: Math.floor(tileCount/2), y: Math.floor(tileCount/2) }} ];
+let velocity = {{ x: 1, y: 0 }};
 let food = spawnFood();
 let tail = 4;
 let gameOver = false;
