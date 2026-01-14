@@ -70,6 +70,11 @@ html = """
     <div id="score-current">得分: 0</div>
     <div id="score-best" class="label">最高: 0</div>
   </div>
+  <!-- control buttons: pause / reset -->
+  <div id="scorebuttons" style="position: fixed; left: 18px; top: 80px; display:flex; gap:8px;">
+    <button id="btn-pause" style="background:rgba(255,255,255,0.04); color:#fff; border-radius:8px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">暂停</button>
+    <button id="btn-reset" style="background:rgba(255,255,255,0.04); color:#fff; border-radius:8px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">重置</button>
+  </div>
   <!-- mobile on-screen controls (removed the previous instructional text) -->
   <div id="controls" class="controls" aria-hidden="false">
     <button id="btn-up" class="control-btn" aria-label="up">▲</button>
@@ -92,6 +97,8 @@ let tileSize = canvas.width / tileCount;
 const speed = {speed};
 const scoreEl = document.getElementById('score-current');
 const bestEl = document.getElementById('score-best');
+const btnPause = document.getElementById('btn-pause');
+const btnReset = document.getElementById('btn-reset');
 
 // responsive: adapt canvas size for mobile while keeping pixel size prop
 function resizeCanvasForDevice() {{
@@ -110,6 +117,7 @@ let tail = 4;
 let gameOver = false;
 let score = 0;
 let bestScore = localStorage.getItem('snake_best_score') ? parseInt(localStorage.getItem('snake_best_score')) : 0;
+let running = true;
 
 document.addEventListener('keydown', (e) => {{
   if (e.key === 'ArrowLeft' && velocity.x !== 1) {{ velocity = {{x:-1,y:0}}; }}
@@ -167,8 +175,17 @@ function spawnFood() {{
 }}
 
 function drawRotatedImage(image, x, y, dirX, dirY) {{
-  // Keep snake head horizontal (no rotation) and draw centered in cell
-  ctx.drawImage(image, x, y, tileSize, tileSize);
+  // Keep snake head horizontal; mirror horizontally when moving left
+  ctx.save();
+  if (dirX === -1) {{
+    // mirror horizontally around cell
+    ctx.translate(x + tileSize, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(image, 0, 0, tileSize, tileSize);
+  }} else {{
+    ctx.drawImage(image, x, y, tileSize, tileSize);
+  }}
+  ctx.restore();
 }}
 
 function gameLoop() {{
@@ -179,6 +196,16 @@ function gameLoop() {{
     ctx.font = '28px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('游戏结束 — 按 F5 刷新重玩', canvas.width/2, canvas.height/2);
+    return;
+  }}
+  // If paused, draw overlay and skip game updates
+  if (!running) {{
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#fff';
+    ctx.font = '28px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('已暂停', canvas.width/2, canvas.height/2);
     return;
   }}
 
@@ -239,6 +266,27 @@ function gameLoop() {{
 
 // 启动主循环
 setInterval(gameLoop, 1000 / speed);
+
+// Pause / Reset handlers
+if (btnPause) {{
+  btnPause.addEventListener('click', () => {{
+    running = !running;
+    btnPause.innerText = running ? '暂停' : '继续';
+  }});
+}}
+if (btnReset) {{
+  btnReset.addEventListener('click', () => {{
+    // reset game state
+    snake = [ {{ x: Math.floor(tileCount/2), y: Math.floor(tileCount/2) }} ];
+    velocity = {{ x: 1, y: 0 }};
+    food = spawnFood();
+    tail = 4;
+    score = 0;
+    gameOver = false;
+    running = true;
+    if (btnPause) btnPause.innerText = '暂停';
+  }});
+}}
 
 // expose score to parent window (optional)
 window.addEventListener('message', (e) => {{
