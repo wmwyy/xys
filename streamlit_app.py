@@ -157,18 +157,9 @@ function spawnFood() {{
 }}
 
 function drawRotatedImage(image, x, y, dirX, dirY) {{
-  const px = x + tileSize/2;
-  const py = y + tileSize/2;
-  let angle = 0;
-  if (dirX === 1 && dirY === 0) angle = 0;
-  if (dirX === -1 && dirY === 0) angle = Math.PI;
-  if (dirX === 0 && dirY === -1) angle = -Math.PI/2;
-  if (dirX === 0 && dirY === 1) angle = Math.PI/2;
-  ctx.save();
-  ctx.translate(px, py);
-  ctx.rotate(angle);
-  ctx.drawImage(image, -tileSize/2, -tileSize/2, tileSize, tileSize);
-  ctx.restore();
+  // Keep the snake head image always horizontal (no rotation).
+  // Draw image at grid cell (x, y) with tileSize.
+  ctx.drawImage(image, x, y, tileSize, tileSize);
 }
 
 function gameLoop() {{
