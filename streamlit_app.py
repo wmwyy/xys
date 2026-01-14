@@ -36,10 +36,10 @@ if not IMG_HEAD.exists() or not IMG_SEED.exists():
 head_data = image_to_data_url(IMG_HEAD)
 seed_data = image_to_data_url(IMG_SEED)
 
-speed = st.sidebar.slider("游戏速度 (帧率)", min_value=5, max_value=20, value=10)
-grid_size = st.sidebar.slider("格子数 (每行/列)", min_value=12, max_value=40, value=20)
-canvas_px = st.sidebar.slider("画布像素大小", min_value=300, max_value=900, value=600)
-show_sidebar_score = st.sidebar.checkbox("显示侧边栏得分", value=True)
+# Fixed gameplay parameters per user request
+speed = 10
+grid_size = 12
+canvas_px = 500
 
 html = """
 <!doctype html>
