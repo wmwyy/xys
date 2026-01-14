@@ -41,7 +41,7 @@ grid_size = st.sidebar.slider("格子数 (每行/列)", min_value=12, max_value=
 canvas_px = st.sidebar.slider("画布像素大小", min_value=300, max_value=900, value=600)
 show_sidebar_score = st.sidebar.checkbox("显示侧边栏得分", value=True)
 
-html = f"""
+html = """
 <!doctype html>
 <html>
 <head>
@@ -212,6 +212,14 @@ window.addEventListener('message', (e) => {{
 </body>
 </html>
 """
+
+# We previously used an f-string and doubled JS braces to avoid Python interpolation.
+# Now convert doubled braces back to single braces for valid JS, then inject values.
+html = html.replace("{{", "{").replace("}}", "}")
+
+# Inject dynamic values into placeholders
+html = html.replace("{head_data}", head_data).replace("{seed_data}", seed_data)
+html = html.replace("{canvas_px}", str(canvas_px)).replace("{grid_size}", str(grid_size)).replace("{speed}", str(speed))
 
 components.html(html, height=canvas_px + 120)
 
