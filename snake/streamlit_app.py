@@ -4,34 +4,61 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 ROOT = Path(__file__).parent
-# prefer new `snake/` directory; fallback to original `贪吃蛇/` if not present
-IMG_HEAD = ROOT / "snake" / "head.png"
-IMG_SEED = ROOT / "snake" / "seed.png"
-OLD_IMG_HEAD = ROOT / "贪吃蛇" / "微信图片_2026-01-08_172321_991.png"
-OLD_IMG_SEED = ROOT / "贪吃蛇" / "微信图片_2026-01-14_165401_643.png"
+# Images live alongside this app in `snake/` — ROOT is already snake/, so reference files directly.
+IMG_HEAD = ROOT / "head.png"
+IMG_SEED = ROOT / "seed.png"
+# Older locations (if images were kept in the parent folder named with Chinese chars)
+OLD_IMG_HEAD = ROOT.parent / "贪吃蛇" / "微信图片_2026-01-08_172321_991.png"
+OLD_IMG_SEED = ROOT.parent / "贪吃蛇" / "微信图片_2026-01-14_165401_643.png"
 
 def image_to_data_url(path: Path) -> str:
     data = path.read_bytes()
     b64 = base64.b64encode(data).decode("ascii")
     return f"data:image/png;base64,{b64}"
 
+def svg_placeholder_data_url(kind: str, size: int = 256) -> str:
+    # simple SVG placeholders: head (circle with glasses-like), seed (small circle)
+    if kind == "head":
+        svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="12" fill="#20323a"/>
+  <circle cx="50" cy="44" r="22" fill="#8fbf9f"/>
+  <rect x="30" y="58" width="40" height="6" rx="3" fill="#7aa98b"/>
+  </svg>'''
+    else:
+        svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="12" fill="#112227"/>
+  <circle cx="50" cy="50" r="18" fill="#ffd27f"/>
+  </svg>'''
+    b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return f"data:image/svg+xml;base64,{b64}"
+
 st.set_page_config(page_title="贪吃蛇 (Snake)", layout="centered")
 st.title("贪吃蛇 — Streamlit 内嵌 HTML 版本")
 
-if not IMG_HEAD.exists() or not IMG_SEED.exists():
-    # try to copy from old locations if available
+missing_head = not IMG_HEAD.exists()
+missing_seed = not IMG_SEED.exists()
+if missing_head or missing_seed:
+    # try to copy from older locations if available
     try:
-        if OLD_IMG_HEAD.exists():
-            (ROOT / "snake").mkdir(exist_ok=True)
-            (ROOT / "snake" / "head.png").write_bytes(OLD_IMG_HEAD.read_bytes())
-        if OLD_IMG_SEED.exists():
-            (ROOT / "snake").mkdir(exist_ok=True)
-            (ROOT / "snake" / "seed.png").write_bytes(OLD_IMG_SEED.read_bytes())
+        if missing_head and OLD_IMG_HEAD.exists():
+            IMG_HEAD.write_bytes(OLD_IMG_HEAD.read_bytes())
+            missing_head = False
+        if missing_seed and OLD_IMG_SEED.exists():
+            IMG_SEED.write_bytes(OLD_IMG_SEED.read_bytes())
+            missing_seed = False
     except Exception:
         pass
-    if not IMG_HEAD.exists() or not IMG_SEED.exists():
-        st.error(f"找不到图片文件，请确保仓库中存在:\n`{IMG_HEAD}` 和 `{IMG_SEED}` 或旧路径 `{OLD_IMG_HEAD}` `{OLD_IMG_SEED}`")
-        st.stop()
+    # if still missing, use SVG placeholders (graceful fallback)
+    if missing_head:
+        head_data = svg_placeholder_data_url("head", size=512)
+    if missing_seed:
+        seed_data = svg_placeholder_data_url("seed", size=512)
+
+# If placeholders not assigned above, convert real images to data URLs
+if 'head_data' not in locals():
+    head_data = image_to_data_url(IMG_HEAD)
+if 'seed_data' not in locals():
+    seed_data = image_to_data_url(IMG_SEED)
 
 head_data = image_to_data_url(IMG_HEAD)
 seed_data = image_to_data_url(IMG_SEED)
