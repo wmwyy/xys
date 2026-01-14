@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>贪吃蛇 — Canvas 版本</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{--bg:#0f1720;--panel:#122227;--accent:#4caf50}
+    body{margin:0;background:linear-gradient(180deg,#071016,#0b1216);color:#eef2f3;font-family:Inter,Arial,Helvetica,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh}
+    .wrap{width:520px}
+    h1{margin:8px 0 14px;font-size:20px;text-align:center}
+    .panel{background:var(--panel);padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    canvas{display:block;background:linear-gradient(180deg,#132029,#0f1720);border-radius:10px;margin:8px auto;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
+    .info{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:6px}
+    .score{background:rgba(0,0,0,0.35);padding:8px 10px;border-radius:8px}
+    .controls{display:flex;gap:8px}
+    .btn{background:rgba(255,255,255,0.04);color:#fff;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;cursor:pointer}
+    .touch-controls{display:flex;gap:8px;justify-content:center;margin-top:6px}
+    .tc-btn{width:56px;height:56px;border-radius:10px;background:rgba(255,255,255,0.03);font-size:22px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>贪吃蛇 — Canvas 版本</h1>
+    <div class="panel">
+      <div class="info">
+        <div class="score">
+          <div id="score">得分: 0</div>
+          <div id="best" style="font-size:12px;color:#cbd5da">最高: 0</div>
+        </div>
+        <div class="controls">
+          <button id="pause" class="btn">暂停</button>
+          <button id="reset" class="btn">重置</button>
+        </div>
+      </div>
+      <canvas id="c" width="500" height="500"></canvas>
+      <div class="touch-controls" id="touch">
+        <button class="tc-btn" id="up">▲</button>
+      </div>
+      <div class="touch-controls" style="margin-top:8px">
+        <button class="tc-btn" id="left">◀</button>
+        <button class="tc-btn" id="right">▶</button>
+      </div>
+      <div class="touch-controls" style="margin-top:6px">
+        <button class="tc-btn" id="down">▼</button>
+      </div>
+    </div>
+  </div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const SCORE = document.getElementById('score');
+const BEST = document.getElementById('best');
+const pauseBtn = document.getElementById('pause');
+const resetBtn = document.getElementById('reset');
+const tileCount = 12;
+let tileSize = canvas.width / tileCount;
+let speed = 5; // fps
+
+const headImg = new Image();
+headImg.src = 'head.png';
+const seedImg = new Image();
+seedImg.src = 'seed.png';
+
+let snake = [{x:6,y:6}];
+let vel = {x:1,y:0};
+let tail = 4;
+let food = spawnFood();
+let running = true;
+let score = 0;
+let best = parseInt(localStorage.getItem('snake_best')||'0',10);
+BEST.innerText = '最高: ' + best;
+
+function spawnFood(){
+  while(true){
+    const p = {x:Math.floor(Math.random()*tileCount), y:Math.floor(Math.random()*tileCount)};
+    if(!snake.some(s=>s.x===p.x && s.y===p.y)) return p;
+  }
+}
+
+function draw(){
+  if(!running) return;
+  // move
+  const head = {x:(snake[0].x+vel.x+tileCount)%tileCount, y:(snake[0].y+vel.y+tileCount)%tileCount};
+  if(snake.some((s,i)=>i>0 && s.x===head.x && s.y===head.y)){ running=false; return; }
+  snake.unshift(head);
+  while(snake.length>tail) snake.pop();
+  // eat
+  if(head.x===food.x && head.y===food.y){
+    tail++; score++; if(score>best){best=score;localStorage.setItem('snake_best',best); BEST.innerText='最高: '+best}
+    food = spawnFood();
+    SCORE.innerText = '得分: '+score;
+  }
+  // draw
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // background subtle
+  ctx.fillStyle = '#0f2a30';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // draw food
+  ctx.drawImage(seedImg, food.x*tileSize, food.y*tileSize, tileSize, tileSize);
+  // draw snake body (rounded rect segments)
+  for(let i=snake.length-1;i>=1;i--){
+    const s = snake[i];
+    const t = i/snake.length;
+    const x = s.x*tileSize + tileSize*0.07;
+    const y = s.y*tileSize + tileSize*0.15;
+    const w = tileSize*0.86; const h = tileSize*0.7; const r = tileSize*0.12;
+    const hue = 120 - t*60;
+    const grad = ctx.createLinearGradient(x,y,x+w,y+h);
+    grad.addColorStop(0, `hsl(${hue},70%,${48 - t*18}%)`);
+    grad.addColorStop(1, `hsl(${Math.max(0,hue-20)},60%,${Math.max(18,30 - t*10)}%)`);
+    roundRect(ctx,x,y,w,h,r,true,false);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = Math.max(1,tileSize*0.03); ctx.stroke();
+  }
+  // draw head (use image)
+  const hx = snake[0].x*tileSize;
+  const hy = snake[0].y*tileSize;
+  ctx.drawImage(headImg, hx, hy, tileSize, tileSize);
+}
+
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  if(r===undefined) r=5;
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+  if(fill) ctx.fill();
+  if(stroke) ctx.stroke();
+}
+
+// controls
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'&&vel.x!==1) vel={x:-1,y:0};
+  if(e.key==='ArrowUp'&&vel.y!==1) vel={x:0,y:-1};
+  if(e.key==='ArrowRight'&&vel.x!==-1) vel={x:1,y:0};
+  if(e.key==='ArrowDown'&&vel.y!==-1) vel={x:0,y:1};
+});
+// touch buttons
+['up','down','left','right'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('click',()=>{ if(id==='up'&&vel.y!==1) vel={x:0,y:-1}; if(id==='down'&&vel.y!==-1) vel={x:0,y:1}; if(id==='left'&&vel.x!==1) vel={x:-1,y:0}; if(id==='right'&&vel.x!==-1) vel={x:1,y:0}; });
+});
+
+pauseBtn.addEventListener('click',()=>{
+  running=!running; pauseBtn.innerText = running? '暂停':'继续';
+  if(running) loop();
+});
+resetBtn.addEventListener('click',()=>{
+  snake=[{x:6,y:6}]; vel={x:1,y:0}; tail=4; food=spawnFood(); score=0; running=true; SCORE.innerText='得分: 0';
+  if(pauseBtn) pauseBtn.innerText='暂停';
+});
+
+// main loop
+let intervalId=null;
+function loop(){
+  if(intervalId) clearInterval(intervalId);
+  intervalId = setInterval(()=>{ if(running) draw(); }, 1000/speed);
+}
+loop();
+
+</script>
+</body>
+</html>
+
