@@ -51,13 +51,26 @@ html = """
     #container {{ display:flex; align-items:center; justify-content:center; padding:10px; }}
     canvas {{ background:#222; border-radius:8px; box-shadow: 0 6px 24px rgba(0,0,0,0.6); }}
     #info {{ color:#ccc; font-size:14px; text-align:center; margin-top:8px; }}
+    /* mobile control styles */
+    .controls {{ position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; display:flex; flex-direction:column; align-items:center; gap:8px; z-index:9999; }}
+    .controls .hrow {{ display:flex; gap:8px; }}
+    .control-btn {{ width:56px; height:56px; border-radius:12px; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.08); font-size:22px; touch-action: none; }}
+    @media (min-width:700px) {{ .controls {{ display:none; }} }}
   </style>
 </head>
 <body>
   <div id="container">
     <canvas id="game" width="{canvas_px}" height="{canvas_px}"></canvas>
   </div>
-  <div id="info">方向键 / 触控滑动 控制 — 吃到种子会变长 — 当前格子数: {grid_size} × {grid_size}</div>
+  <!-- mobile on-screen controls (removed the previous instructional text) -->
+  <div id="controls" class="controls" aria-hidden="false">
+    <button id="btn-up" class="control-btn" aria-label="up">▲</button>
+    <div class="hrow">
+      <button id="btn-left" class="control-btn" aria-label="left">◀</button>
+      <button id="btn-right" class="control-btn" aria-label="right">▶</button>
+    </div>
+    <button id="btn-down" class="control-btn" aria-label="down">▼</button>
+  </div>
 <script>
 const headImg = new Image();
 headImg.src = "{head_data}";
@@ -114,6 +127,25 @@ canvas.addEventListener('touchend', (e) => {{
     if (dy > 20 && velocity.y !== -1) velocity = {{x:0,y:1}};
   }}
 }});
+
+// on-screen button controls (touch and click)
+function setDirectionFromButton(dx, dy, evt) {{
+  if (evt) evt.preventDefault();
+  if (dx === -velocity.x && dy === -velocity.y) return;
+  velocity = {{x:dx, y:dy}};
+}}
+const btnUp = document.getElementById('btn-up');
+const btnDown = document.getElementById('btn-down');
+const btnLeft = document.getElementById('btn-left');
+const btnRight = document.getElementById('btn-right');
+for (const btn of [btnUp, btnDown, btnLeft, btnRight]) {{
+  if (!btn) continue;
+  btn.addEventListener('touchstart', (e) => {{ e.preventDefault(); }}, {{passive:false}});
+}}
+if (btnUp) {{ btnUp.addEventListener('click', (e) => setDirectionFromButton(0,-1,e)); btnUp.addEventListener('touchend', (e)=>setDirectionFromButton(0,-1,e)); }}
+if (btnDown) {{ btnDown.addEventListener('click', (e) => setDirectionFromButton(0,1,e)); btnDown.addEventListener('touchend', (e)=>setDirectionFromButton(0,1,e)); }}
+if (btnLeft) {{ btnLeft.addEventListener('click', (e) => setDirectionFromButton(-1,0,e)); btnLeft.addEventListener('touchend', (e)=>setDirectionFromButton(-1,0,e)); }}
+if (btnRight) {{ btnRight.addEventListener('click', (e) => setDirectionFromButton(1,0,e)); btnRight.addEventListener('touchend', (e)=>setDirectionFromButton(1,0,e)); }}
 
 function spawnFood() {{
   let p;
@@ -222,6 +254,4 @@ html = html.replace("{head_data}", head_data).replace("{seed_data}", seed_data)
 html = html.replace("{canvas_px}", str(canvas_px)).replace("{grid_size}", str(grid_size)).replace("{speed}", str(speed))
 
 components.html(html, height=canvas_px + 120)
-
-st.markdown("**操作提示**: 使用方向键控制移动。若要部署到 `share.streamlit.io`，请确保仓库包含本文件和 `requirements.txt`，然后将仓库推到 GitHub，登录 `share.streamlit.io` 选择仓库并运行 `streamlit_app.py`。")
 
