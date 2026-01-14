@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>贪吃蛇 — 腾讯风</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div><strong>贪吃蛇</strong> · Canvas</div>
+      <div class="controls">
+        <select id="skinSel"></select>
+        <select id="diffSel"><option>Easy</option><option selected>Normal</option><option>Hard</option></select>
+        <button id="startBtn" class="btn">开始游戏</button>
+      </div>
+    </div>
+    <div class="canvas-wrap">
+      <div class="left-side panel">
+        <div style="margin-bottom:12px">排行榜</div>
+        <div id="leaderboard" style="max-height:380px;overflow:auto"></div>
+      </div>
+      <div class="right-side panel" style="position:relative">
+        <canvas id="canvas-game" width="600" height="600"></canvas>
+        <div id="level-hud" class="hud" style="display:none">关卡 1</div>
+      </div>
+    </div>
+  </div>
+  <script src="skins.js"></script>
+  <script>
+    // populate skins and bind start
+    const skinSel = document.getElementById('skinSel');
+    Object.keys(SKINS).forEach(k=>{ const opt=document.createElement('option'); opt.value=k; opt.textContent=SKINS[k].name; skinSel.appendChild(opt); });
+    const startBtn=document.getElementById('startBtn');
+    startBtn.addEventListener('click',()=>{
+      // build config and inject into window
+      window.GAME_CONFIG = { skin: SKINS[skinSel.value], speed: (document.getElementById('diffSel').value==='Easy'?4:document.getElementById('diffSel').value==='Hard'?8:6), grid:12, width:600, height:600 };
+      // load game script
+      const s=document.createElement('script'); s.src='game.js'; document.body.appendChild(s);
+      startBtn.disabled=true;
+    });
+  </script>
+</body>
+</html>
+
