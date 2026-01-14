@@ -21,40 +21,28 @@
 </head>
 <body>
   <div class="wrap">
-    <header style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:12px">
-        <img src="head.png" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,0.06)">
-        <h1 style="margin:0;font-size:22px">贪吃蛇</h1>
-      </div>
-      <div style="text-align:right;color:#9fb7b0;font-size:13px">版本 · Canvas</div>
-    </header>
-    <div class="panel" style="position:relative;overflow:visible;">
-      <div style="position:absolute;left:18px;top:18px;z-index:5;">
-        <div class="score" style="padding:10px 12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.6)">
-          <div id="score" style="font-weight:600">得分: 0</div>
+    <h1>贪吃蛇 — Canvas 版本</h1>
+    <div class="panel">
+      <div class="info">
+        <div class="score">
+          <div id="score">得分: 0</div>
           <div id="best" style="font-size:12px;color:#cbd5da">最高: 0</div>
         </div>
-        <div style="margin-top:10px;display:flex;gap:8px">
-          <button id="pause" class="btn" style="min-width:72px">暂停</button>
-          <button id="reset" class="btn" style="min-width:72px">重置</button>
+        <div class="controls">
+          <button id="pause" class="btn">暂停</button>
+          <button id="reset" class="btn">重置</button>
         </div>
       </div>
-
-      <div style="display:flex;justify-content:center;align-items:center;padding:26px 12px;">
-        <canvas id="c" width="520" height="520"></canvas>
+      <canvas id="c" width="500" height="500"></canvas>
+      <div class="touch-controls" id="touch">
+        <button class="tc-btn" id="up">▲</button>
       </div>
-
-      <div style="position:absolute;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;align-items:center">
-        <div class="touch-controls" id="touch">
-          <button class="tc-btn" id="up">▲</button>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="tc-btn" id="left">◀</button>
-          <button class="tc-btn" id="right">▶</button>
-        </div>
-        <div>
-          <button class="tc-btn" id="down">▼</button>
-        </div>
+      <div class="touch-controls" style="margin-top:8px">
+        <button class="tc-btn" id="left">◀</button>
+        <button class="tc-btn" id="right">▶</button>
+      </div>
+      <div class="touch-controls" style="margin-top:6px">
+        <button class="tc-btn" id="down">▼</button>
       </div>
     </div>
   </div>
@@ -110,34 +98,20 @@ function draw(){
   ctx.fillRect(0,0,canvas.width,canvas.height);
   // draw food
   ctx.drawImage(seedImg, food.x*tileSize, food.y*tileSize, tileSize, tileSize);
-  // draw snake body (Tencent-like glossy segments with inner highlight)
+  // draw snake body (rounded rect segments)
   for(let i=snake.length-1;i>=1;i--){
     const s = snake[i];
     const t = i/snake.length;
-    const x = s.x*tileSize + tileSize*0.06;
-    const y = s.y*tileSize + tileSize*0.12;
-    const w = tileSize*0.88; const h = tileSize*0.7; const r = tileSize*0.14;
-    const hue = 120 - t*50;
-    const grad = ctx.createLinearGradient(x,y,x+w,y);
-    grad.addColorStop(0, `hsl(${hue},72%,${48 - t*18}%)`);
-    grad.addColorStop(0.6, `hsl(${hue-10},65%,${36 - t*12}%)`);
-    grad.addColorStop(1, `hsl(${Math.max(0,hue-20)},60%,${24 - t*10}%)`);
-    // base
-    ctx.beginPath();
-    roundRect(ctx,x,y,w,h,r,false,false);
+    const x = s.x*tileSize + tileSize*0.07;
+    const y = s.y*tileSize + tileSize*0.15;
+    const w = tileSize*0.86; const h = tileSize*0.7; const r = tileSize*0.12;
+    const hue = 120 - t*60;
+    const grad = ctx.createLinearGradient(x,y,x+w,y+h);
+    grad.addColorStop(0, `hsl(${hue},70%,${48 - t*18}%)`);
+    grad.addColorStop(1, `hsl(${Math.max(0,hue-20)},60%,${Math.max(18,30 - t*10)}%)`);
+    roundRect(ctx,x,y,w,h,r,true,false);
     ctx.fillStyle = grad; ctx.fill();
-    // glossy highlight
-    ctx.beginPath();
-    ctx.globalAlpha = 0.16;
-    roundRect(ctx,x+Math.max(2,tileSize*0.04),y+Math.max(2,tileSize*0.05),w*0.6,h*0.35,r,false,false);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-    ctx.globalAlpha = 1.0;
-    // outline
-    ctx.lineWidth = Math.max(1,tileSize*0.03);
-    ctx.strokeStyle = 'rgba(0,0,0,0.28)';
-    roundRect(ctx,x,y,w,h,r,false,false);
-    ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = Math.max(1,tileSize*0.03); ctx.stroke();
   }
   // draw head (use image)
   const hx = snake[0].x*tileSize;
