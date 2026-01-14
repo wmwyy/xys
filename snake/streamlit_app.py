@@ -120,11 +120,19 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const tileCount = {grid_size};
 let tileSize = canvas.width / tileCount;
-const speed = {speed};
+let speed = {speed};
 const scoreEl = document.getElementById('score-current');
 const bestEl = document.getElementById('score-best');
 const btnPause = document.getElementById('btn-pause');
 const btnReset = document.getElementById('btn-reset');
+// Leveling and animation state
+let level = 1;
+let eatenSinceLevel = 0;
+let seedsToLevel = 5;
+const levelEl = null; // placeholder if needed
+// particle effects for eat animation
+let particles = [];
+
 
 // responsive: adapt canvas size for mobile while keeping pixel size prop
 function resizeCanvasForDevice() {{
@@ -200,6 +208,45 @@ function spawnFood() {{
   return p;
 }}
 
+function spawnParticles(cx, cy, count=12) {{
+  for (let i=0;i<count;i++) {{
+    const angle = Math.random()*Math.PI*2;
+    const speed = 1 + Math.random()*2;
+    particles.push({{
+      x: cx + tileSize/2,
+      y: cy + tileSize/2,
+      vx: Math.cos(angle)*speed,
+      vy: Math.sin(angle)*speed,
+      life: 40 + Math.floor(Math.random()*20),
+      size: 4 + Math.random()*6,
+      alpha: 1
+    }});
+  }}
+}
+
+function updateParticles() {{
+  for (let i = particles.length-1; i>=0;i--) {{
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05;
+    p.life -= 1;
+    p.alpha = Math.max(0, p.life/60);
+    if (p.life <= 0) particles.splice(i,1);
+  }}
+}
+
+function renderParticles() {{
+  for (const p of particles) {{
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = 'rgba(255,220,120,0.9)';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size*0.6, 0, Math.PI*2);
+    ctx.fill();
+  }}
+  ctx.globalAlpha = 1;
+}}
+
 function drawRotatedImage(image, x, y, dirX, dirY) {{
   // Keep snake head horizontal; mirror horizontally when moving left
   ctx.save();
@@ -262,7 +309,7 @@ function gameLoop() {{
   // 画食物（居中）
   ctx.drawImage(seedImg, food.x*tileSize, food.y*tileSize, tileSize, tileSize);
 
-  // 画蛇身体（圆角矩形段，渐变填充，更像真实蛇身）
+  // 画蛇身体（鳞片效果的圆角矩形段）
   function drawSegmentAt(cellX, cellY, t) {{
     const x = cellX * tileSize;
     const y = cellY * tileSize;
@@ -271,12 +318,13 @@ function gameLoop() {{
     const rx = Math.max(4, tileSize * 0.12);
     const cx = x + (tileSize - w) / 2;
     const cy = y + (tileSize - h) / 2;
-    const hue = 120 - t * 60;
-    const light1 = 48 - t * 18;
-    const light2 = 30 - t * 10;
+    const hue = 120 - t * 50;
+    const light1 = 46 - t * 16;
+    const light2 = 28 - t * 10;
     const grad = ctx.createLinearGradient(cx, cy, cx + w, cy + h);
-    grad.addColorStop(0, `hsl(${hue},70%,${light1}%)`);
-    grad.addColorStop(1, `hsl(${Math.max(0,hue-20)},60%,${Math.max(18,light2)}%)`);
+    grad.addColorStop(0, `hsl(${hue},72%,${light1}%)`);
+    grad.addColorStop(1, `hsl(${Math.max(0,hue-18)},60%,${Math.max(18,light2)}%)`);
+    // base rounded rect
     ctx.beginPath();
     ctx.moveTo(cx + rx, cy);
     ctx.lineTo(cx + w - rx, cy);
@@ -290,8 +338,22 @@ function gameLoop() {{
     ctx.closePath();
     ctx.fillStyle = grad;
     ctx.fill();
+    // draw small scale arcs
+    const scaleW = Math.max(6, tileSize * 0.18);
+    const rows = Math.max(2, Math.floor(h / (scaleW*0.5)));
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    for (let r = 0; r < rows; r++) {{
+      const yOff = cy + r * (scaleW*0.45) + 2;
+      for (let sx = 0; sx < w - 4; sx += scaleW*0.7) {{
+        const px = cx + sx + (r%2 ? scaleW*0.35 : 0);
+        ctx.beginPath();
+        ctx.arc(px, yOff, scaleW*0.32, Math.PI, 2*Math.PI);
+        ctx.fill();
+      }}
+    }}
+    // outline
     ctx.lineWidth = Math.max(1, tileSize*0.03);
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.28)';
     ctx.stroke();
   }}
   for (let i = snake.length-1; i >= 1; i--) {{
@@ -305,13 +367,28 @@ function gameLoop() {{
   const headPy = snake[0].y * tileSize;
   drawRotatedImage(headImg, headPx, headPy, velocity.x, velocity.y);
  
-  // 更新并显示分数卡片
+  // 更新并显示分数卡片与等级
   if (scoreEl) scoreEl.innerText = '得分: ' + score;
   if (bestEl) bestEl.innerText = '最高: ' + bestScore;
+  // render particles
+  updateParticles();
+  renderParticles();
+  // level UI (draw subtle level badge)
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillRect(canvas.width - 92, 8, 76, 34);
+  ctx.fillStyle = '#fff';
+  ctx.font = '14px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('关卡 ' + level, canvas.width - 50, 30);
 }}
 
-// 启动主循环
-setInterval(gameLoop, 1000 / speed);
+// 启动主循环 -- use adjustable interval so we can change speed on level up
+let intervalId = null;
+function startLoop() {{
+  if (intervalId) clearInterval(intervalId);
+  intervalId = setInterval(gameLoop, 1000 / speed);
+}}
+startLoop();
 
 // Pause / Reset handlers
 if (btnPause) {{
