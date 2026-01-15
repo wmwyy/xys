@@ -149,7 +149,7 @@ html = """
     #scorecard .label {{ color:#a8b2d1; font-size:12px; }}
     .game-area {{ flex: 1 1 auto; display:flex; align-items:flex-start; justify-content:center; }}
     /* mobile control styles */
-    .controls {{ position: fixed; left: 50%; transform: translateX(-50%); bottom: 22px; display:flex; flex-direction:column; align-items:center; gap:18px; z-index:9999; }}
+    .controls {{ position: fixed; left: 50%; transform: translateX(-50%); bottom: 22px; display:flex; flex-direction:column; align-items:center; gap:18px; z-index:10010; }}
     .controls .hrow {{ display:flex; gap:36px; }}
     .control-btn {{
       width:68px; height:68px;
@@ -252,6 +252,7 @@ html = """
   <div id="scorebuttons" style="position: fixed; right: 18px; top: 80px; left: auto; display:flex; gap:8px; z-index:10000;">
     <button id="btn-pause" style="background:rgba(255,255,255,0.04); color:#fff; border-radius:8px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">暂停</button>
     <button id="btn-reset" style="background:rgba(255,255,255,0.04); color:#fff; border-radius:8px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">重置</button>
+    <button id="btn-toggle-particles" style="background:rgba(255,255,255,0.04); color:#fff; border-radius:8px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">性能模式</button>
   </div>
   <!-- mobile on-screen controls (removed the previous instructional text) -->
   <div id="controls" class="controls" aria-hidden="false">
@@ -288,10 +289,20 @@ let particles = [];
 
 // responsive: adapt canvas size for mobile while keeping pixel size prop
 function resizeCanvasForDevice() {{
-  const maxW = Math.min(window.innerWidth - 24, {canvas_px});
-  canvas.width = maxW;
-  canvas.height = maxW;
+  const displaySize = Math.min(window.innerWidth - 24, {canvas_px});
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+
+  // set CSS display size (what user sees)
+  canvas.style.width = displaySize + 'px';
+  canvas.style.height = displaySize + 'px';
+
+  // set backing store size for high-DPI
+  canvas.width = Math.floor(displaySize * ratio);
+  canvas.height = Math.floor(displaySize * ratio);
+
+  // tileSize in drawing pixels (backing pixels)
   tileSize = canvas.width / tileCount;
+
   // Reinitialize background particles when canvas resizes
   initBackgroundParticles();
 }}
@@ -343,6 +354,7 @@ let bestScore = localStorage.getItem('snake_best_score') ? parseInt(localStorage
 let running = true;
 // Background particles
 let bgParticles = [];
+let showBgParticles = true;
 let gameStartTime = Date.now();
 let lastKeyTime = 0;
 
@@ -441,20 +453,22 @@ function spawnParticles(cx, cy, count=12) {{
 
 function initBackgroundParticles() {{
   bgParticles = [];
-  for (let i = 0; i < 50; i++) {{
+  const count = window.innerWidth < 700 ? 24 : 50;
+  for (let i = 0; i < count; i++) {{
     bgParticles.push({{
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
       size: Math.random() * 2 + 1,
-      alpha: Math.random() * 0.5 + 0.1,
+      alpha: Math.random() * 0.5 + 0.05,
       color: ['#7877c6', '#ff77c6', '#78c6ff', '#c678ff'][Math.floor(Math.random()*4)]
     }});
   }}
 }}
 
 function updateBackgroundParticles() {{
+  if (!showBgParticles) return;
   for (const p of bgParticles) {{
     p.x += p.vx;
     p.y += p.vy;
@@ -471,6 +485,7 @@ function updateBackgroundParticles() {{
 }}
 
 function renderBackgroundParticles() {{
+  if (!showBgParticles) return;
   for (const p of bgParticles) {{
     ctx.globalAlpha = p.alpha;
     ctx.fillStyle = p.color;
@@ -791,6 +806,17 @@ function addButtonSounds() {{
 
 // Call after DOM is ready
 setTimeout(addButtonSounds, 1000);
+
+// Toggle background particles performance mode
+setTimeout(() => {{
+  const btnToggle = document.getElementById('btn-toggle-particles');
+  if (btnToggle) {{
+    btnToggle.addEventListener('click', () => {{
+      showBgParticles = !showBgParticles;
+      btnToggle.innerText = showBgParticles ? '性能模式' : '视觉模式';
+    }});
+  }}
+}}, 1200);
 
 // expose score to parent window (optional)
 window.addEventListener('message', (e) => {{
