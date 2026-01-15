@@ -382,6 +382,9 @@ let running = true;
 // Background particles
 let bgParticles = [];
 let showBgParticles = true;
+// debug helpers
+let debugMode = true;
+let debugFrameCounter = 0;
 let gameStartTime = Date.now();
 let lastKeyTime = 0;
 
@@ -527,6 +530,33 @@ function renderBackgroundParticles() {{
     ctx.shadowBlur = 0;
   }}
   ctx.globalAlpha = 1;
+}}
+
+// Draw debug grid and overlays to help diagnose empty canvas
+function drawDebugGrid() {{
+  if (!debugMode) return;
+  ctx.save();
+  // grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = Math.max(1, Math.floor(tileSize / 20));
+  for (let x = 0; x <= tileCount; x++) {{
+    ctx.beginPath();
+    ctx.moveTo(x * tileSize, 0);
+    ctx.lineTo(x * tileSize, canvas.height);
+    ctx.stroke();
+  }}
+  for (let y = 0; y <= tileCount; y++) {{
+    ctx.beginPath();
+    ctx.moveTo(0, y * tileSize);
+    ctx.lineTo(canvas.width, y * tileSize);
+    ctx.stroke();
+  }}
+  // debug text
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText(`debug: tileCount=${tileCount} tileSize=${Math.round(tileSize)} canvas=${canvas.width}x${canvas.height}`, 8, 16);
+  ctx.restore();
 }}
 
 function updateParticles() {{
@@ -686,6 +716,8 @@ function gameLoop() {{
   // Update and render background particles
   updateBackgroundParticles();
   renderBackgroundParticles();
+  // debug grid/overlays
+  drawDebugGrid();
 
   // 画食物（居中）- 添加闪烁效果
   const foodGlow = 0.8 + 0.2 * Math.sin(Date.now() * 0.008);
@@ -765,6 +797,30 @@ function gameLoop() {{
     ctx.fill();
     ctx.shadowBlur = 0;
     ctx.restore();
+  }}
+  // debug overlays: highlight food and snake bounding boxes, log occasionally
+  if (debugMode) {{
+    // highlight food with red outline
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,80,80,0.95)';
+    ctx.lineWidth = Math.max(2, Math.floor(tileSize*0.06));
+    ctx.strokeRect(food.x*tileSize + 1, food.y*tileSize + 1, tileSize-2, tileSize-2);
+    ctx.restore();
+
+    // outline snake segments
+    ctx.save();
+    ctx.strokeStyle = 'rgba(140,220,160,0.9)';
+    ctx.lineWidth = Math.max(1, Math.floor(tileSize*0.04));
+    for (const s of snake) {{
+      ctx.strokeRect(s.x*tileSize + 1, s.y*tileSize + 1, tileSize-2, tileSize-2);
+    }}
+    ctx.restore();
+
+    // occasional console logging to inspect values
+    debugFrameCounter = (debugFrameCounter + 1) % 60;
+    if (debugFrameCounter === 0) {{
+      try {{ console.log('DEBUG snake:', snake, 'food:', food, 'tileSize:', tileSize, 'canvas:', canvas.width, canvas.height); }} catch(e){{}}
+    }}
   }}
  
   // 更新并显示分数卡片与等级
