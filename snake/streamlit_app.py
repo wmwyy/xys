@@ -268,6 +268,23 @@ const headImg = new Image();
 headImg.src = "{head_data}";
 const seedImg = new Image();
 seedImg.src = "{seed_data}";
+// Wait for images to load before starting the game loop to ensure drawImage works
+let imagesLoaded = 0;
+let gameStarted = false;
+function _maybeStartAfterImages() {{
+  if (!gameStarted && imagesLoaded >= 2) {{
+    gameStarted = true;
+    // ensure canvas is sized correctly and particles initialized
+    resizeCanvasForDevice();
+    initBackgroundParticles();
+    startupAnimation();
+    startLoop();
+  }}
+}}
+headImg.onload = () => {{ imagesLoaded++; _maybeStartAfterImages(); }};
+seedImg.onload = () => {{ imagesLoaded++; _maybeStartAfterImages(); }};
+headImg.onerror = () => {{ imagesLoaded++; _maybeStartAfterImages(); }};
+seedImg.onerror = () => {{ imagesLoaded++; _maybeStartAfterImages(); }};
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -761,7 +778,7 @@ function startLoop() {{
   if (intervalId) clearInterval(intervalId);
   intervalId = setInterval(gameLoop, 1000 / speed);
 }}
-startLoop();
+// startLoop() deferred until images load to avoid drawing before images available
 
 // Pause / Reset handlers
 if (btnPause) {{
