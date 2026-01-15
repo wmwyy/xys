@@ -70,7 +70,7 @@ if 'seed_data' not in locals():
 # Fixed gameplay parameters for a smoother experience
 speed = 5
 grid_size = 12
-canvas_px = 500
+canvas_px = 680
 
 html = """
 <!doctype html>
@@ -190,7 +190,7 @@ html = """
     @media (max-width:700px) {{
       #container {{ flex-direction:column; align-items:center; padding:12px; gap:12px; }}
       .game-area {{ width:100%; }}
-      canvas {{ width: min(92vw, {canvas_px}px); height: auto; }}
+      canvas {{ width: min(96vw, {canvas_px}px); height: auto; }}
       #scorecard {{ position: relative; left:0; top:0; margin-bottom:8px; }}
       #scorebuttons {{ position: relative; left:0; top:0; margin-top:8px; }}
       .controls {{ position: static; transform:none; bottom:auto; left:auto; }}
@@ -249,7 +249,7 @@ html = """
     </div>
   </div>
   <!-- control buttons: pause / reset -->
-  <div id="scorebuttons" style="position: fixed; left: 18px; top: 80px; display:flex; gap:8px;">
+  <div id="scorebuttons" style="position: fixed; right: 18px; top: 80px; left: auto; display:flex; gap:8px; z-index:10000;">
     <button id="btn-pause" style="background:rgba(255,255,255,0.04); color:#fff; border-radius:8px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">暂停</button>
     <button id="btn-reset" style="background:rgba(255,255,255,0.04); color:#fff; border-radius:8px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">重置</button>
   </div>
@@ -328,6 +328,15 @@ let snake = [ {{ x: Math.floor(tileCount/2), y: Math.floor(tileCount/2) }} ];
 let velocity = {{ x: 1, y: 0 }};
 let food = spawnFood();
 let tail = 4;
+// Ensure snake initial segments are visible (create initial segments equal to tail)
+{{
+  const center = {{ x: Math.floor(tileCount/2), y: Math.floor(tileCount/2) }};
+  snake = [];
+  for (let i = 0; i < tail; i++) {{
+    // place segments to the left of head so snake is visible on start
+    snake.push({{ x: (center.x - i + tileCount) % tileCount, y: center.y }});
+  }}
+}}
 let gameOver = false;
 let score = 0;
 let bestScore = localStorage.getItem('snake_best_score') ? parseInt(localStorage.getItem('snake_best_score')) : 0;
