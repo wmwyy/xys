@@ -726,6 +726,19 @@ function gameLoop() {{
   const headPx = snake[0].x * tileSize;
   const headPy = snake[0].y * tileSize;
   drawRotatedImage(headImg, headPx, headPy, velocity.x, velocity.y);
+  // If head image failed to load, draw a fallback circle so the snake is visible
+  if (!headImg.complete || (headImg.naturalWidth && headImg.naturalWidth === 0)) {{
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(120,200,150,0.6)';
+    ctx.fillStyle = 'rgba(140,220,160,0.98)';
+    ctx.beginPath();
+    ctx.arc(headPx + tileSize/2, headPy + tileSize/2, Math.max(4, tileSize*0.44), 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }}
  
   // 更新并显示分数卡片与等级
   if (scoreEl) scoreEl.innerText = '得分: ' + score;
