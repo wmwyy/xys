@@ -32,8 +32,15 @@ def svg_placeholder_data_url(kind: str, size: int = 256) -> str:
     b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
     return f"data:image/svg+xml;base64,{b64}"
 
-st.set_page_config(page_title="贪吃蛇", layout="centered")
-st.title("贪吃蛇")
+st.set_page_config(page_title="贪吃蛇 - 炫酷版", layout="centered")
+st.title("🐍 贪吃蛇 - 炫酷版")
+st.markdown("""
+<div style="text-align: center; margin-bottom: 20px; color: #666;">
+  🎮 使用方向键或触摸按钮控制蛇的移动<br>
+  🍎 吃到食物获得分数，躲避撞到自己<br>
+  📱 支持移动端触摸控制
+</div>
+""", unsafe_allow_html=True)
 
 missing_head = not IMG_HEAD.exists()
 missing_seed = not IMG_SEED.exists()
@@ -71,18 +78,113 @@ html = """
 <head>
   <meta charset="utf-8" />
   <style>
-    body {{ margin:0; padding:0; background: linear-gradient(180deg,#071016 0%, #0b1216 60%); color:#eef2f3; font-family: Inter, Arial, Helvetica, sans-serif; }}
+    body {{
+      margin:0; padding:0;
+      background: linear-gradient(45deg, #0a0a0a, #1a1a2e, #16213e, #0f0f23);
+      background-size: 400% 400%;
+      animation: gradientShift 8s ease infinite;
+      color:#eef2f3;
+      font-family: 'Segoe UI', Inter, Arial, Helvetica, sans-serif;
+      overflow-x: hidden;
+    }}
+    @keyframes gradientShift {{
+      0% {{ background-position: 0% 50%; }}
+      50% {{ background-position: 100% 50%; }}
+      100% {{ background-position: 0% 50%; }}
+    }}
+    body::before {{
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.2) 0%, transparent 50%),
+                  radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }}
     #container {{ display:flex; align-items:flex-start; justify-content:center; padding:18px; gap:20px; }}
-    canvas {{ background: linear-gradient(180deg,#132029,#0f1720); border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); }}
+    canvas {{
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-radius:16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8),
+                  0 0 60px rgba(120, 119, 198, 0.2),
+                  inset 0 2px 0 rgba(255,255,255,0.1),
+                  inset 0 -2px 0 rgba(0,0,0,0.2);
+      border:2px solid rgba(120, 119, 198, 0.3);
+      position: relative;
+      overflow: hidden;
+    }}
+    canvas::before {{
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%; right: -50%; bottom: -50%;
+      background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.1), transparent);
+      animation: rotate 4s linear infinite;
+      pointer-events: none;
+    }}
+    @keyframes rotate {{
+      from {{ transform: rotate(0deg); }}
+      to {{ transform: rotate(360deg); }}
+    }}
     #info {{ display:none; }}
     /* scorecard (placed left of canvas to avoid overlap) */
-    #scorecard {{ background: rgba(0,0,0,0.45); color:#fff; padding:12px 14px; border-radius:10px; box-shadow: 0 6px 18px rgba(0,0,0,0.6); font-size:14px; min-width:92px; }}
-    #scorecard .label {{ color:#cbd5da; font-size:12px; }}
+    #scorecard {{
+      background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.9));
+      color:#fff;
+      padding:16px 18px;
+      border-radius:14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6),
+                  0 0 0 1px rgba(255,255,255,0.1),
+                  inset 0 1px 0 rgba(255,255,255,0.2);
+      font-size:16px;
+      min-width:100px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(120, 119, 198, 0.3);
+      animation: glow 2s ease-in-out infinite alternate;
+    }}
+    @keyframes glow {{
+      from {{ box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.2); }}
+      to {{ box-shadow: 0 8px 32px rgba(120, 119, 198, 0.3), 0 0 20px rgba(120, 119, 198, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); }}
+    }}
+    #scorecard .label {{ color:#a8b2d1; font-size:12px; }}
     .game-area {{ flex: 1 1 auto; display:flex; align-items:flex-start; justify-content:center; }}
     /* mobile control styles */
     .controls {{ position: fixed; left: 50%; transform: translateX(-50%); bottom: 22px; display:flex; flex-direction:column; align-items:center; gap:18px; z-index:9999; }}
     .controls .hrow {{ display:flex; gap:36px; }}
-    .control-btn {{ width:64px; height:64px; border-radius:14px; background: rgba(255,255,255,0.04); color:#fff; border:1px solid rgba(255,255,255,0.06); font-size:24px; touch-action: none; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }}
+    .control-btn {{
+      width:68px; height:68px;
+      border-radius:16px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+      color:#fff;
+      border:2px solid rgba(120, 119, 198, 0.4);
+      font-size:28px;
+      touch-action: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6),
+                  0 0 0 1px rgba(255,255,255,0.1),
+                  inset 0 1px 0 rgba(255,255,255,0.2);
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }}
+    .control-btn::before {{
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }}
+    .control-btn:hover {{
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.8),
+                  0 0 20px rgba(120, 119, 198, 0.3),
+                  inset 0 1px 0 rgba(255,255,255,0.3);
+    }}
+    .control-btn:active {{
+      transform: translateY(0);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.8),
+                  inset 0 2px 4px rgba(0,0,0,0.3);
+    }}
+    .control-btn:active::before {{ left: 100%; }}
     @media (min-width:700px) {{ .controls {{ display:none; }} }}
     /* responsive: stack on small screens */
     @media (max-width:700px) {{
@@ -94,8 +196,45 @@ html = """
       .controls {{ position: static; transform:none; bottom:auto; left:auto; }}
     }}
     /* level HUD */
-    .level-hud {{ position: fixed; left:50%; top:14vh; transform:translateX(-50%) scale(0.8); background: rgba(20,30,34,0.88); color:#fff; padding:14px 22px; border-radius:12px; font-size:20px; box-shadow:0 12px 40px rgba(0,0,0,0.6); opacity:0; pointer-events:none; z-index:99999; transition:transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease; }}
-    .level-hud.show {{ opacity:1; transform:translateX(-50%) scale(1.06); }}
+    .level-hud {{
+      position: fixed; left:50%; top:14vh; transform:translateX(-50%) scale(0.8);
+      background: linear-gradient(135deg, rgba(120, 119, 198, 0.9), rgba(255, 119, 198, 0.8));
+      color:#fff; padding:18px 26px; border-radius:16px;
+      font-size:24px; font-weight: bold;
+      box-shadow: 0 20px 60px rgba(120, 119, 198, 0.4),
+                  0 0 40px rgba(255, 119, 198, 0.3);
+      opacity:0; pointer-events:none; z-index:99999;
+      transition: all 0.5s cubic-bezier(.2,.8,.2,1);
+      border: 2px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(15px);
+    }}
+    .level-hud.show {{
+      opacity:1; transform:translateX(-50%) scale(1.1);
+      animation: levelPulse 1.4s ease-in-out;
+    }}
+    @keyframes levelPulse {{
+      0%, 100% {{ transform: translateX(-50%) scale(1.1); }}
+      50% {{ transform: translateX(-50%) scale(1.15); }}
+    }}
+    /* score buttons */
+    #scorebuttons button {{
+      background: linear-gradient(135deg, rgba(26, 26, 46, 0.8), rgba(22, 33, 62, 0.8));
+      color:#fff;
+      border-radius:10px;
+      padding:8px 12px;
+      border:1px solid rgba(120, 119, 198, 0.3);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }}
+    #scorebuttons button:hover {{
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(120, 119, 198, 0.3);
+    }}
+    #scorebuttons button:active {{
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }}
   </style>
 </head>
 <body>
@@ -153,9 +292,37 @@ function resizeCanvasForDevice() {{
   canvas.width = maxW;
   canvas.height = maxW;
   tileSize = canvas.width / tileCount;
+  // Reinitialize background particles when canvas resizes
+  initBackgroundParticles();
 }}
 resizeCanvasForDevice();
 window.addEventListener('resize', resizeCanvasForDevice);
+
+// Initialize background particles
+initBackgroundParticles();
+
+// Startup animation
+function startupAnimation() {{
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+
+  // Create explosion effect at startup
+  for (let i = 0; i < 20; i++) {{
+    setTimeout(() => {{
+      spawnParticles(centerX, centerY, 8);
+    }}, i * 100);
+  }}
+
+  // Add some initial particles around the snake
+  setTimeout(() => {{
+    for (let i = 0; i < snake.length; i++) {{
+      const segment = snake[i];
+      spawnParticles(segment.x * tileSize + tileSize/2, segment.y * tileSize + tileSize/2, 3);
+    }}
+  }}, 1000);
+}}
+
+startupAnimation();
 
 let snake = [ {{ x: Math.floor(tileCount/2), y: Math.floor(tileCount/2) }} ];
 let velocity = {{ x: 1, y: 0 }};
@@ -165,12 +332,27 @@ let gameOver = false;
 let score = 0;
 let bestScore = localStorage.getItem('snake_best_score') ? parseInt(localStorage.getItem('snake_best_score')) : 0;
 let running = true;
+// Background particles
+let bgParticles = [];
+let gameStartTime = Date.now();
+let lastKeyTime = 0;
 
 document.addEventListener('keydown', (e) => {{
-  if (e.key === 'ArrowLeft' && velocity.x !== 1) {{ velocity = {{x:-1,y:0}}; }}
-  if (e.key === 'ArrowUp' && velocity.y !== 1) {{ velocity = {{x:0,y:-1}}; }}
-  if (e.key === 'ArrowRight' && velocity.x !== -1) {{ velocity = {{x:1,y:0}}; }}
-  if (e.key === 'ArrowDown' && velocity.y !== -1) {{ velocity = {{x:0,y:1}}; }}
+  let newVelocity = null;
+  if (e.key === 'ArrowLeft' && velocity.x !== 1) {{ newVelocity = {{x:-1,y:0}}; }}
+  if (e.key === 'ArrowUp' && velocity.y !== 1) {{ newVelocity = {{x:0,y:-1}}; }}
+  if (e.key === 'ArrowRight' && velocity.x !== -1) {{ newVelocity = {{x:1,y:0}}; }}
+  if (e.key === 'ArrowDown' && velocity.y !== -1) {{ newVelocity = {{x:0,y:1}}; }}
+
+  if (newVelocity && (Date.now() - lastKeyTime) > 50) {{
+    velocity = newVelocity;
+    lastKeyTime = Date.now();
+
+    // Add key press particle effect
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    spawnParticles(centerX, centerY, 6);
+  }}
 }});
 
 // touch support: swipe detection
@@ -198,6 +380,17 @@ function setDirectionFromButton(dx, dy, evt) {{
   if (evt) evt.preventDefault();
   if (dx === -velocity.x && dy === -velocity.y) return;
   velocity = {{x:dx, y:dy}};
+
+  // Add touch feedback sound
+  playSound(400, 0.08, 'square');
+
+  // Add visual feedback
+  if (evt && evt.target) {{
+    evt.target.style.transform = 'scale(0.95)';
+    setTimeout(() => {{
+      evt.target.style.transform = '';
+    }}, 100);
+  }}
 }}
 const btnUp = document.getElementById('btn-up');
 const btnDown = document.getElementById('btn-down');
@@ -237,6 +430,54 @@ function spawnParticles(cx, cy, count=12) {{
   }}
 }
 
+function initBackgroundParticles() {{
+  bgParticles = [];
+  for (let i = 0; i < 50; i++) {{
+    bgParticles.push({{
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      size: Math.random() * 2 + 1,
+      alpha: Math.random() * 0.5 + 0.1,
+      color: ['#7877c6', '#ff77c6', '#78c6ff', '#c678ff'][Math.floor(Math.random()*4)]
+    }});
+  }}
+}}
+
+function updateBackgroundParticles() {{
+  for (const p of bgParticles) {{
+    p.x += p.vx;
+    p.y += p.vy;
+
+    // Wrap around edges
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    // Subtle pulsing
+    p.alpha = 0.1 + 0.4 * (0.5 + 0.5 * Math.sin(Date.now() * 0.001 + p.x * 0.01));
+  }}
+}}
+
+function renderBackgroundParticles() {{
+  for (const p of bgParticles) {{
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Add glow effect
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = p.color;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }}
+  ctx.globalAlpha = 1;
+}}
+
 function updateParticles() {{
   for (let i = particles.length-1; i>=0;i--) {{
     const p = particles[i];
@@ -252,10 +493,16 @@ function updateParticles() {{
 function renderParticles() {{
   for (const p of particles) {{
     ctx.globalAlpha = p.alpha;
-    ctx.fillStyle = 'rgba(255,220,120,0.9)';
+    ctx.fillStyle = p.color || 'rgba(255,220,120,0.9)';
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size*0.6, 0, Math.PI*2);
     ctx.fill();
+
+    // Add glow effect for particles
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = p.color || '#ffd27f';
+    ctx.fill();
+    ctx.shadowBlur = 0;
   }}
   ctx.globalAlpha = 1;
 }}
@@ -276,22 +523,59 @@ function drawRotatedImage(image, x, y, dirX, dirY) {{
 
 function gameLoop() {{
   if (gameOver) {{
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    // Animated game over screen
+    const time = Date.now() * 0.002;
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
     ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Pulsing background effect
+    ctx.fillStyle = `rgba(255, 107, 157, ${0.1 + 0.1 * Math.sin(time)})`;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
     ctx.fillStyle = '#fff';
-    ctx.font = '28px Arial';
+    ctx.font = 'bold 32px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('游戏结束 — 按 F5 刷新重玩', canvas.width/2, canvas.height/2);
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#ff6b9d';
+    ctx.fillText('游戏结束', canvas.width/2, canvas.height/2 - 40);
+
+    ctx.font = '18px Arial';
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ddd';
+    ctx.fillText(`最终得分: ${score}`, canvas.width/2, canvas.height/2);
+
+    ctx.fillStyle = '#aaa';
+    ctx.fillText('按 F5 刷新重玩', canvas.width/2, canvas.height/2 + 30);
+
+    // Animated particles for game over
+    if (Math.random() < 0.1) {{
+      spawnParticles(Math.random() * canvas.width, Math.random() * canvas.height, 3);
+    }}
+
     return;
   }}
   // If paused, draw overlay and skip game updates
   if (!running) {{
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    const time = Date.now() * 0.003;
+    ctx.fillStyle = `rgba(0,0,0,${0.5 + 0.1 * Math.sin(time)})`;
     ctx.fillRect(0,0,canvas.width,canvas.height);
+
     ctx.fillStyle = '#fff';
-    ctx.font = '28px Arial';
+    ctx.font = 'bold 36px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('已暂停', canvas.width/2, canvas.height/2);
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#7877c6';
+    ctx.fillText('⏸️ 已暂停', canvas.width/2, canvas.height/2 - 20);
+
+    ctx.font = '16px Arial';
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ccc';
+    ctx.fillText('点击继续按钮恢复游戏', canvas.width/2, canvas.height/2 + 20);
+
+    // Animated pause particles
+    if (Math.random() < 0.05) {{
+      spawnParticles(Math.random() * canvas.width, Math.random() * canvas.height, 2);
+    }}
     return;
   }}
 
@@ -300,6 +584,8 @@ function gameLoop() {{
   // 碰撞自身
   if (snake.some((s, idx) => idx>0 && s.x === head.x && s.y === head.y)) {{
     gameOver = true;
+    // Play game over sound
+    playSound(200, 0.8, 'sawtooth');
     return;
   }}
   snake.unshift(head);
@@ -312,9 +598,14 @@ function gameLoop() {{
     eatenSinceLevel += 1;
     // particles and feedback
     spawnParticles(head.x*tileSize, head.y*tileSize, 14);
+    // Play eat sound
+    playSound(600 + score * 20, 0.15, 'triangle');
+
     if (score > bestScore) {{
       bestScore = score;
       localStorage.setItem('snake_best_score', bestScore);
+      // Play high score sound
+      playSound(1000, 0.3, 'sine');
     }}
     // level up check
     if (eatenSinceLevel >= seedsToLevel) {{
@@ -324,6 +615,8 @@ function gameLoop() {{
       // increase speed slightly
       speed = Math.min(22, speed + 1);
       startLoop();
+      // Play level up sound
+      playSound(800, 0.5, 'sawtooth');
       // show HUD animation
       const hud = document.getElementById('level-hud');
       if (hud) {{
@@ -339,8 +632,18 @@ function gameLoop() {{
   // 绘制
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // 画食物（居中）
+  // Update and render background particles
+  updateBackgroundParticles();
+  renderBackgroundParticles();
+
+  // 画食物（居中）- 添加闪烁效果
+  const foodGlow = 0.8 + 0.2 * Math.sin(Date.now() * 0.008);
+  ctx.globalAlpha = foodGlow;
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = '#ffd27f';
   ctx.drawImage(seedImg, food.x*tileSize, food.y*tileSize, tileSize, tileSize);
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
 
   // 画蛇身体（鳞片效果的圆角矩形段）
   function drawSegmentAt(cellX, cellY, t) {{
@@ -443,6 +746,42 @@ if (btnReset) {{
     if (btnPause) btnPause.innerText = '暂停';
   }});
 }}
+
+// Audio functions
+function playSound(frequency, duration, type = 'sine') {{
+  try {{
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    oscillator.type = type;
+
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+  }} catch (e) {{
+    // Audio not supported, silently fail
+  }}
+}}
+
+// Add click sound effects to buttons
+function addButtonSounds() {{
+  const buttons = document.querySelectorAll('button');
+  buttons.forEach(btn => {{
+    btn.addEventListener('click', () => {{
+      playSound(800, 0.1, 'square');
+    }});
+  }});
+}}
+
+// Call after DOM is ready
+setTimeout(addButtonSounds, 1000);
 
 // expose score to parent window (optional)
 window.addEventListener('message', (e) => {{
