@@ -102,7 +102,7 @@ html = """
       pointer-events: none;
       z-index: -1;
     }}
-    #container {{ display:flex; align-items:flex-start; justify-content:center; padding:18px; gap:20px; }}
+    #container {{ display:flex; align-items:flex-start; justify-content:center; padding:18px; gap:20px; max-width: calc({canvas_px}px + 260px); margin: 12px auto; }}
     canvas {{
       background: linear-gradient(135deg, #1a1a2e, #16213e);
       border-radius:16px;
@@ -113,6 +113,8 @@ html = """
       border:2px solid rgba(120, 119, 198, 0.3);
       position: relative;
       overflow: hidden;
+      display: block;
+      margin: 12px auto;
     }}
     canvas::before {{
       content: '';
@@ -265,9 +267,7 @@ html = """
   </div>
 <script>
 const headImg = new Image();
-headImg.src = "{head_data}";
 const seedImg = new Image();
-seedImg.src = "{seed_data}";
 // Wait for images to load before starting the game loop to ensure drawImage works
 let imagesLoaded = 0;
 let gameStarted = false;
@@ -281,10 +281,20 @@ function _maybeStartAfterImages() {{
     startLoop();
   }}
 }}
-headImg.onload = () => {{ imagesLoaded++; _maybeStartAfterImages(); }};
-seedImg.onload = () => {{ imagesLoaded++; _maybeStartAfterImages(); }};
-headImg.onerror = () => {{ imagesLoaded++; _maybeStartAfterImages(); }};
-seedImg.onerror = () => {{ imagesLoaded++; _maybeStartAfterImages(); }};
+// robust counting to avoid missing cached loads or double-counts
+headImg._counted = false;
+seedImg._counted = false;
+headImg.onload = () => {{ if (!headImg._counted) {{ headImg._counted = true; imagesLoaded++; _maybeStartAfterImages(); }} }};
+seedImg.onload = () => {{ if (!seedImg._counted) {{ seedImg._counted = true; imagesLoaded++; _maybeStartAfterImages(); }} }};
+headImg.onerror = () => {{ if (!headImg._counted) {{ headImg._counted = true; imagesLoaded++; _maybeStartAfterImages(); }} }};
+seedImg.onerror = () => {{ if (!seedImg._counted) {{ seedImg._counted = true; imagesLoaded++; _maybeStartAfterImages(); }} }};
+// set src after handlers so cached images don't miss the handlers
+headImg.src = "{head_data}";
+seedImg.src = "{seed_data}";
+// if already complete (cached), count them and maybe start immediately
+if (headImg.complete && !headImg._counted) {{ headImg._counted = true; imagesLoaded++; }}
+if (seedImg.complete && !seedImg._counted) {{ seedImg._counted = true; imagesLoaded++; }}
+_maybeStartAfterImages();
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
