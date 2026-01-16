@@ -162,8 +162,10 @@ button:disabled {
 /* 移动端样式 */
 @media (max-width: 768px) {
     .container {
-        padding: 20px;
-        margin: 10px;
+        padding: 12px;
+        margin: 6px;
+        max-height: calc(100vh - 12px);
+        overflow: hidden;
     }
 
     h1 {
@@ -178,17 +180,19 @@ button:disabled {
 
     #game-canvas {
         width: 100%;
-        max-width: 300px;
+        max-width: 320px;
+        height: auto;
     }
 
     .controls {
         flex-direction: column;
         align-items: center;
+        margin-top: 6px;
     }
 
     button {
-        width: 200px;
-        padding: 15px;
+        width: 160px;
+        padding: 12px;
     }
 
     .instructions {
@@ -263,6 +267,43 @@ button:disabled {
 
 @media (max-width: 768px) {
     .mobile-dpad { display: block; }
+}
+
+/* 进一步压缩移动端间距，确保游戏画布与控制同时可见 */
+@media (max-width: 420px) {
+    .container {
+        padding: 8px;
+        margin: 4px;
+    }
+    #game-canvas {
+        max-width: 280px;
+        height: auto;
+    }
+    .mobile-dpad {
+        width: 120px;
+        height: 120px;
+    }
+    .mobile-dpad .dpad-grid {
+        gap: 6px;
+        width: 120px;
+        height: 120px;
+    }
+    .mobile-dpad .dpad-btn,
+    .control-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+    .controls {
+        margin-top: 6px;
+    }
+    .touch-controls {
+        margin-bottom: 6px;
+    }
+    button {
+        width: 140px;
+        padding: 10px;
+    }
 }
 
 /* 游戏结束覆盖层 */
