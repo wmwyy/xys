@@ -19,19 +19,30 @@ const headImg = new Image();
 const foodImg = new Image();
 let headImgLoaded = false;
 let foodImgLoaded = false;
+// 内嵌回退图片（SVG data URL），以防文件缺失
+const fallbackHeadSrc = 'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"50\" fill=\"%23e74c3c\"/></svg>';
+const fallbackSeedSrc = 'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"50\" fill=\"%23f39c12\"/></svg>';
 // 先尝试常用命名，再回退到 seed.png（有些用户以 seed.png 命名食物图片）
 headImg.src = 'head.png';
 headImg.onload = () => { headImgLoaded = true; };
 headImg.onerror = () => {
-    // 如需可在此添加备用头部图片名
+    // 如果本地 head.png 不存在，回退到内嵌 SVG（避免破图）
+    if (!headImgLoaded && !headImg._triedFallback) {
+        headImg._triedFallback = true;
+        headImg.src = fallbackHeadSrc;
+    }
 };
 
 // 先尝试 food.png，失败时回退到 seed.png
 foodImg.onload = () => { foodImgLoaded = true; };
 foodImg.onerror = () => {
+    // 先尝试使用项目内的 seed.png 回退，如果不存在则使用内嵌SVG
     if (!foodImgLoaded && !foodImg._triedSeed) {
         foodImg._triedSeed = true;
         foodImg.src = 'seed.png';
+    } else if (!foodImgLoaded && !foodImg._triedFallback) {
+        foodImg._triedFallback = true;
+        foodImg.src = fallbackSeedSrc;
     }
 };
 foodImg.src = 'food.png';

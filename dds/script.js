@@ -16,7 +16,9 @@ class WhackAMole {
         this.holes = Array.from({length: 9}, (_, i) => document.getElementById(`hole-${i}`));
         this.moles = Array.from({length: 9}, (_, i) => document.getElementById(`mole-${i}`));
         // 候选图片（优先使用项目目录已存在的头像文件）
-        this.candidateImages = ['./mole1.png', './mole2.png', './head.png', './seed.png'];
+        // 添加内嵌SVG data URL 作为最后回退，避免缺图导致页面显示问题
+        this.fallbackMoleDataUrl = 'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"50\" fill=\"%238B4513\"/></svg>';
+        this.candidateImages = ['./mole1.png', './mole2.png', './head.png', './seed.png', this.fallbackMoleDataUrl];
         this.availableImages = [];
         this.preloadImages();
 
