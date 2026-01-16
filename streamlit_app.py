@@ -127,61 +127,12 @@ def snake_game():
                 js_content = js_content.replace(f"'{filename}'", f"'{data_url}'")
                 js_content = js_content.replace(f"\"{filename}\"", f"\"{data_url}\"")
 
-        # 替换HTML中的相对路径为绝对路径
-        html_content = html_content.replace('src="style.css"', "")
-        html_content = html_content.replace('<link rel="stylesheet" href="style.css">', "")
-        html_content = html_content.replace('src="script.js"', "")
-        html_content = html_content.replace('<script src="script.js"></script>', "")
+        # 把 snake/index.html 作为模板：替换其中的 CSS/JS 引用为内联内容
+        html_with_css = html_content.replace('<link rel="stylesheet" href="style.css">', css_content)
+        html_with_all = html_with_css.replace('<script src="script.js"></script>', js_content)
 
-        # 创建完整的HTML
-        full_html = f"""
-        <!DOCTYPE html>
-        <html lang="zh-CN">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>贪吃蛇游戏</title>
-            {css_content}
-        </head>
-        <body>
-            <div class="container">
-                <h1>贪吃蛇游戏</h1>
-                <div class="game-info">
-                    <div class="score">分数: <span id="score">0</span></div>
-                    <div class="high-score">最高分: <span id="high-score">0</span></div>
-                </div>
-                <div class="game-container">
-                    <canvas id="game-canvas" width="400" height="400"></canvas>
-                </div>
-                <div class="controls">
-                    <button id="start-btn">开始游戏</button>
-                    <button id="pause-btn" disabled>暂停</button>
-                    <button id="reset-btn">重新开始</button>
-                </div>
-                <div class="instructions">
-                    <h3>操作说明：</h3>
-                    <p><strong>键盘：</strong>↑↓←→ 或 WASD 控制方向</p>
-                    <p><strong>触摸：</strong>点击屏幕相应区域控制方向</p>
-                    <p><strong>空格键：</strong>暂停/继续游戏</p>
-                </div>
-                <div class="touch-controls">
-                    <div class="control-row">
-                        <div class="control-btn" data-direction="up">↑</div>
-                    </div>
-                    <div class="control-row">
-                        <div class="control-btn" data-direction="left">←</div>
-                        <div class="control-btn" data-direction="down">↓</div>
-                        <div class="control-btn" data-direction="right">→</div>
-                    </div>
-                </div>
-            </div>
-            {js_content}
-        </body>
-        </html>
-        """
-
-        # 使用Streamlit的HTML组件显示游戏
-        components.html(full_html, height=800, scrolling=True)
+        # 使用Streamlit的HTML组件显示（直接渲染 index.html 内容，保留你在文件中做的布局）
+        components.html(html_with_all, height=820, scrolling=True)
 
     except FileNotFoundError as e:
         st.error(f"游戏文件未找到: {e}")
@@ -225,75 +176,11 @@ def dds_game():
                 js_content = js_content.replace(f"'{token}'", f"'{data_url}'")
                 js_content = js_content.replace(f"\"{token}\"", f"\"{data_url}\"")
 
-        # 替换HTML中的相对路径为绝对路径
-        html_content = html_content.replace('src="style.css"', "")
-        html_content = html_content.replace('<link rel="stylesheet" href="style.css">', "")
-        html_content = html_content.replace('src="script.js"', "")
-        html_content = html_content.replace('<script src="script.js"></script>', "")
+        # 将 dds/index.html 作为模板，并注入 CSS/JS 内容
+        html_with_css = html_content.replace('<link rel="stylesheet" href="style.css">', css_content)
+        html_with_all = html_with_css.replace('<script src="script.js"></script>', js_content)
 
-        # 创建完整的HTML
-        full_html = f"""
-        <!DOCTYPE html>
-        <html lang="zh-CN">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>打地鼠游戏</title>
-            {css_content}
-        </head>
-        <body>
-            <div class="game-container">
-                <h1>打地鼠游戏</h1>
-
-                <div class="game-info">
-                    <div class="score">得分: <span id="score">0</span></div>
-                    <div class="time">时间: <span id="time">30</span>秒</div>
-                </div>
-
-                <div class="game-board">
-                    <div class="hole" id="hole-0">
-                        <div class="mole" id="mole-0"></div>
-                    </div>
-                    <div class="hole" id="hole-1">
-                        <div class="mole" id="mole-1"></div>
-                    </div>
-                    <div class="hole" id="hole-2">
-                        <div class="mole" id="mole-2"></div>
-                    </div>
-                    <div class="hole" id="hole-3">
-                        <div class="mole" id="mole-3"></div>
-                    </div>
-                    <div class="hole" id="hole-4">
-                        <div class="mole" id="mole-4"></div>
-                    </div>
-                    <div class="hole" id="hole-5">
-                        <div class="mole" id="mole-5"></div>
-                    </div>
-                    <div class="hole" id="hole-6">
-                        <div class="mole" id="mole-6"></div>
-                    </div>
-                    <div class="hole" id="hole-7">
-                        <div class="mole" id="mole-7"></div>
-                    </div>
-                    <div class="hole" id="hole-8">
-                        <div class="mole" id="mole-8"></div>
-                    </div>
-                </div>
-
-                <div class="controls">
-                    <button id="start-btn">开始游戏</button>
-                    <button id="reset-btn">重置游戏</button>
-                </div>
-
-                <div class="message" id="message"></div>
-            </div>
-            {js_content}
-        </body>
-        </html>
-        """
-
-        # 使用Streamlit的HTML组件显示游戏
-        components.html(full_html, height=900, scrolling=True)
+        components.html(html_with_all, height=900, scrolling=True)
 
     except FileNotFoundError as e:
         st.error(f"游戏文件未找到: {e}")
