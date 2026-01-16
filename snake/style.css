@@ -304,6 +304,28 @@ button:disabled {
         width: 140px;
         padding: 10px;
     }
+    /* Allow controls to overlap the bottom of the game container */
+    .container {
+        max-height: calc(100vh - 12px);
+        overflow: visible; /* show overlapping controls */
+    }
+    .game-container {
+        margin-bottom: 0;
+        padding-bottom: 6px;
+    }
+    /* Move controls up so they sit partially over the canvas bottom */
+    .controls {
+        margin-top: -44px;
+        z-index: 40;
+        position: relative;
+    }
+    .touch-controls {
+        margin-bottom: 8px;
+    }
+    /* Slightly raise D-pad so it doesn't push layout */
+    .mobile-dpad {
+        margin-bottom: -8px;
+    }
 }
 
 /* 游戏结束覆盖层 */
