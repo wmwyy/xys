@@ -297,6 +297,16 @@ button:disabled {
     .controls {
         margin-top: 6px;
     }
+    /* Ensure canvas fills available width and remove right-side white gap */
+    .game-container {
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+    #game-canvas {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: block;
+    }
     .touch-controls {
         margin-bottom: 6px;
     }

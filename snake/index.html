@@ -29,17 +29,7 @@
         <!-- 将底部方向按钮移动到开始游戏按钮上方 -->
         <!-- duplicate touch-controls removed (buttons already placed above Start) -->
 
-        <div class="controls">
-            <button id="start-btn">开始游戏</button>
-            <button id="pause-btn" disabled>暂停</button>
-            <button id="reset-btn">重新开始</button>
-        </div>
-        <div class="instructions">
-            <h3>操作说明：</h3>
-            <p><strong>键盘：</strong>↑↓←→ 或 WASD 控制方向</p>
-            <p><strong>触摸：</strong>请使用界面上的方向按钮控制方向</p>
-            <p><strong>空格键：</strong>暂停/继续游戏</p>
-        </div>
+        <!-- 操作说明已移除，控制按钮将放在此处下方 -->
         <div class="touch-controls">
             <div class="control-row">
                 <div class="control-btn" data-direction="up">↑</div>
@@ -49,6 +39,12 @@
                 <div class="control-btn" data-direction="down">↓</div>
                 <div class="control-btn" data-direction="right">→</div>
             </div>
+        </div>
+        <!-- 将三个控制按钮（开始/暂停/重新开始）放在画面下方（替代已移除的操作说明区域） -->
+        <div class="controls moved-controls">
+            <button id="start-btn">开始游戏</button>
+            <button id="pause-btn" disabled>暂停</button>
+            <button id="reset-btn">重新开始</button>
         </div>
     </div>
     <script src="script.js"></script>
