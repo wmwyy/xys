@@ -31,6 +31,20 @@ def get_image_base64(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode()
 
+
+# 返回 image 的 data URL（根据文件扩展名设定 MIME）
+def get_image_data_url(image_path):
+    if not os.path.exists(image_path):
+        return None
+    b64 = get_image_base64(image_path)
+    ext = os.path.splitext(image_path)[1].lstrip('.').lower()
+    # 常见扩展名映射
+    if ext in ('png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'):
+        mime = f"image/{'jpeg' if ext == 'jpg' else ext}"
+    else:
+        mime = "application/octet-stream"
+    return f"data:{mime};base64,{b64}"
+
 # 主页面
 def main():
     st.title("🎮 游戏中心")
@@ -99,6 +113,19 @@ def snake_game():
         css_content = load_css("snake/style.css")
         html_content = load_html("snake/index.html")
         js_content = load_js("snake/script.js")
+
+        # 将 snake 目录下的图片内联为 data-URL，避免 components.html 中的相对路径失效
+        snake_image_map = {
+            'head.png': 'snake/head.png',
+            'food.png': 'snake/food.png',
+            'seed.png': 'snake/seed.png',
+        }
+        for filename, path in snake_image_map.items():
+            data_url = get_image_data_url(path)
+            if data_url:
+                # 替换单引号和双引号两种情况
+                js_content = js_content.replace(f"'{filename}'", f"'{data_url}'")
+                js_content = js_content.replace(f"\"{filename}\"", f"\"{data_url}\"")
 
         # 替换HTML中的相对路径为绝对路径
         html_content = html_content.replace('src="style.css"', "")
@@ -180,6 +207,23 @@ def dds_game():
         css_content = load_css("dds/style.css")
         html_content = load_html("dds/index.html")
         js_content = load_js("dds/script.js")
+
+        # 将 dds 目录下的图片内联为 data-URL（支持 mole1/mole2/head/seed）
+        dds_candidates = {
+            './mole1.png': 'dds/mole1.png',
+            './mole2.png': 'dds/mole2.png',
+            'mole1.png': 'dds/mole1.png',
+            'mole2.png': 'dds/mole2.png',
+            './head.png': 'dds/head.png',
+            './seed.png': 'dds/seed.png',
+            'head.png': 'dds/head.png',
+            'seed.png': 'dds/seed.png',
+        }
+        for token, path in dds_candidates.items():
+            data_url = get_image_data_url(path)
+            if data_url:
+                js_content = js_content.replace(f"'{token}'", f"'{data_url}'")
+                js_content = js_content.replace(f"\"{token}\"", f"\"{data_url}\"")
 
         # 替换HTML中的相对路径为绝对路径
         html_content = html_content.replace('src="style.css"', "")
