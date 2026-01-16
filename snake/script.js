@@ -101,6 +101,26 @@ function bindEvents() {
             const dir = e.target.dataset.direction;
             handleDirectionChange(dir);
         });
+        // 支持触摸开始事件，提升移动端响应速度
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const dir = e.currentTarget.dataset.direction;
+            handleDirectionChange(dir);
+        }, { passive: false });
+    });
+
+    // 绑定移动端固定 D-pad 按键（如果存在）
+    const dpadBtns = document.querySelectorAll('.mobile-dpad .dpad-btn');
+    dpadBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const dir = e.currentTarget.dataset.direction;
+            handleDirectionChange(dir);
+        });
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const dir = e.currentTarget.dataset.direction;
+            handleDirectionChange(dir);
+        }, { passive: false });
     });
 
     // 触摸事件（屏幕点击控制）

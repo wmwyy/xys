@@ -206,6 +206,64 @@ button:disabled {
     }
 }
 
+/* 移动端固定方向按键（D-pad） */
+.mobile-dpad {
+    display: none;
+    position: fixed;
+    right: 18px;
+    bottom: 24px;
+    width: 140px;
+    height: 140px;
+    z-index: 2000;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.mobile-dpad .dpad-btn {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.45);
+    color: white;
+    border: none;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-user-select: none;
+    user-select: none;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+}
+
+.mobile-dpad .dpad-btn:active {
+    transform: scale(0.95);
+    background: rgba(0,0,0,0.6);
+}
+
+.mobile-dpad .dpad-btn[data-direction="up"] {
+    left: 46px;
+    top: 6px;
+}
+.mobile-dpad .dpad-btn[data-direction="left"] {
+    left: 6px;
+    top: 46px;
+}
+.mobile-dpad .dpad-btn[data-direction="down"] {
+    left: 46px;
+    top: 86px;
+}
+.mobile-dpad .dpad-btn[data-direction="right"] {
+    left: 86px;
+    top: 46px;
+}
+
+@media (max-width: 768px) {
+    .mobile-dpad {
+        display: block;
+    }
+}
+
 /* 游戏结束覆盖层 */
 .game-over {
     position: absolute;
