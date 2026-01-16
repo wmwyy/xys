@@ -284,6 +284,17 @@ function _maybeStartAfterImages() {{
     }}, 0);
   }}
 }}
+
+// failsafe: if images never fire, start after 400ms anyway
+setTimeout(() => {{
+  if (!gameStarted) {{
+    gameStarted = true;
+    resizeCanvasForDevice();
+    initBackgroundParticles();
+    startupAnimation();
+    startLoop();
+  }}
+}}, 400);
 // robust counting to avoid missing cached loads or double-counts
 headImg._counted = false;
 seedImg._counted = false;
@@ -722,12 +733,28 @@ function gameLoop() {{
   // debug grid/overlays
   drawDebugGrid();
 
-  // 画食物（居中）- 添加闪烁效果
+  // 画食物（居中）- 添加闪烁效果，回退为方块/圆形（不依赖图片）
   const foodGlow = 0.8 + 0.2 * Math.sin(Date.now() * 0.008);
   ctx.globalAlpha = foodGlow;
   ctx.shadowBlur = 15;
   ctx.shadowColor = '#ffd27f';
-  ctx.drawImage(seedImg, food.x*tileSize, food.y*tileSize, tileSize, tileSize);
+  try {{
+    if (seedImg && seedImg.complete && !(seedImg.naturalWidth === 0)) {{
+      ctx.drawImage(seedImg, food.x*tileSize, food.y*tileSize, tileSize, tileSize);
+    }} else {{
+      // fallback: bright circle
+      ctx.fillStyle = '#ffd27f';
+      ctx.beginPath();
+      ctx.arc(food.x*tileSize + tileSize/2, food.y*tileSize + tileSize/2, Math.max(4, tileSize*0.36), 0, Math.PI*2);
+      ctx.fill();
+    }}
+  }} catch (e) {{
+    // fallback drawing if drawImage throws
+    ctx.fillStyle = '#ffd27f';
+    ctx.beginPath();
+    ctx.arc(food.x*tileSize + tileSize/2, food.y*tileSize + tileSize/2, Math.max(4, tileSize*0.36), 0, Math.PI*2);
+    ctx.fill();
+  }}
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 
@@ -787,9 +814,24 @@ function gameLoop() {{
   // 画蛇头（图片，带方向）
   const headPx = snake[0].x * tileSize;
   const headPy = snake[0].y * tileSize;
-  drawRotatedImage(headImg, headPx, headPy, velocity.x, velocity.y);
-  // If head image failed to load, draw a fallback circle so the snake is visible
-  if (!headImg.complete || (headImg.naturalWidth && headImg.naturalWidth === 0)) {{
+  // draw head image if available, otherwise fallback to circle
+  try {{
+    if (headImg && headImg.complete && !(headImg.naturalWidth === 0)) {{
+      drawRotatedImage(headImg, headPx, headPy, velocity.x, velocity.y);
+    }} else {{
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(120,200,150,0.6)';
+      ctx.fillStyle = 'rgba(140,220,160,0.98)';
+      ctx.beginPath();
+      ctx.arc(headPx + tileSize/2, headPy + tileSize/2, Math.max(4, tileSize*0.44), 0, Math.PI*2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }}
+  }} catch (e) {{
+    // fallback on any exception
     ctx.save();
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 10;
