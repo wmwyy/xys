@@ -127,8 +127,8 @@ function bindEvents() {
         }, { passive: false });
     });
 
-    // 触摸事件（屏幕点击控制）
-    canvas.addEventListener('touchstart', handleTouch, { passive: false });
+    // 触摸事件（屏幕点击控制） - 已禁用，使用界面按钮控制方向以避免误触
+    // canvas.addEventListener('touchstart', handleTouch, { passive: false });
 }
 
 // 处理键盘输入
