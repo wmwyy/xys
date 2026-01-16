@@ -297,6 +297,16 @@ button:disabled {
     .controls {
         margin-top: 6px;
     }
+    /* Moved controls layout when placed under canvas */
+    .controls.moved-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-top: -22px; /* sit closer under canvas without excessive overlap */
+        z-index: 40;
+        position: relative;
+    }
     /* Ensure canvas fills available width and remove right-side white gap */
     .game-container {
         padding-right: 8px;
