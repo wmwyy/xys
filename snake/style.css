@@ -206,21 +206,34 @@ button:disabled {
     }
 }
 
-/* 移动端固定方向按键（D-pad） */
+/* 移动端固定方向按键（D-pad） — 在小屏幕内显示，位于开始按钮上方 */
 .mobile-dpad {
     display: none;
-    position: fixed;
-    right: 18px;
-    bottom: 24px;
     width: 140px;
     height: 140px;
-    z-index: 2000;
-    pointer-events: auto;
+    margin: 8px auto;
     touch-action: none;
 }
 
+.mobile-dpad {
+    /* 使用 grid 布局放置四个方向键（上/左/下/右） */
+    display: none;
+    position: relative;
+}
+
+.mobile-dpad .dpad-grid {
+    display: grid;
+    grid-template-columns: 40px 40px 40px;
+    grid-template-rows: 40px 40px 40px;
+    gap: 8px;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+    justify-items: center;
+    align-items: center;
+}
+
 .mobile-dpad .dpad-btn {
-    position: absolute;
     width: 48px;
     height: 48px;
     border-radius: 8px;
@@ -241,27 +254,14 @@ button:disabled {
     background: rgba(0,0,0,0.6);
 }
 
-.mobile-dpad .dpad-btn[data-direction="up"] {
-    left: 46px;
-    top: 6px;
-}
-.mobile-dpad .dpad-btn[data-direction="left"] {
-    left: 6px;
-    top: 46px;
-}
-.mobile-dpad .dpad-btn[data-direction="down"] {
-    left: 46px;
-    top: 86px;
-}
-.mobile-dpad .dpad-btn[data-direction="right"] {
-    left: 86px;
-    top: 46px;
-}
+/* 在 grid 中为方向键分配位置 */
+.mobile-dpad .dpad-btn[data-direction="up"]    { grid-column: 2; grid-row: 1; }
+.mobile-dpad .dpad-btn[data-direction="left"]  { grid-column: 1; grid-row: 2; }
+.mobile-dpad .dpad-btn[data-direction="down"]  { grid-column: 2; grid-row: 3; }
+.mobile-dpad .dpad-btn[data-direction="right"] { grid-column: 3; grid-row: 2; }
 
 @media (max-width: 768px) {
-    .mobile-dpad {
-        display: block;
-    }
+    .mobile-dpad { display: block; }
 }
 
 /* 游戏结束覆盖层 */

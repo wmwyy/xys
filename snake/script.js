@@ -121,6 +121,10 @@ function bindEvents() {
             const dir = e.currentTarget.dataset.direction;
             handleDirectionChange(dir);
         }, { passive: false });
+        // 可选：在 touchmove 时也支持连续方向切换（例如滑动）
+        btn.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
     });
 
     // 触摸事件（屏幕点击控制）
