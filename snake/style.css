@@ -302,10 +302,12 @@ button:disabled {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 10px;
-        margin-top: -22px; /* sit closer under canvas without excessive overlap */
-        z-index: 40;
+        gap: 12px;
+        margin-top: 12px; /* keep controls under D-pad without overlapping */
+        z-index: 30;
         position: relative;
+        /* add a small padding so controls don't touch canvas edge */
+        padding-top: 6px;
     }
     /* Ensure canvas fills available width and remove right-side white gap */
     .game-container {
@@ -344,8 +346,10 @@ button:disabled {
     }
     /* Slightly raise D-pad so it doesn't push layout */
     .mobile-dpad {
-        margin-bottom: -8px;
+        margin-bottom: 12px;
     }
+    /* Ensure D-pad sits above background but below main controls */
+    .mobile-dpad { z-index: 20; position: relative; }
 }
 
 /* 游戏结束覆盖层 */
