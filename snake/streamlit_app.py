@@ -274,11 +274,14 @@ let gameStarted = false;
 function _maybeStartAfterImages() {{
   if (!gameStarted && imagesLoaded >= 2) {{
     gameStarted = true;
-    // ensure canvas is sized correctly and particles initialized
-    resizeCanvasForDevice();
-    initBackgroundParticles();
-    startupAnimation();
-    startLoop();
+    // Defer startup to next tick so the rest of the script (including snake init) runs first
+    setTimeout(() => {{
+      // ensure canvas is sized correctly and particles initialized
+      resizeCanvasForDevice();
+      initBackgroundParticles();
+      startupAnimation();
+      startLoop();
+    }}, 0);
   }}
 }}
 // robust counting to avoid missing cached loads or double-counts
