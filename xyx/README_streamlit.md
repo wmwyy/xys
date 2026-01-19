@@ -45,9 +45,11 @@ python3 -m streamlit run streamlit_app.py
 ## 📁 文件结构
 
 ```
+xyx/
 ├── streamlit_app.py      # 主应用文件
 ├── requirements.txt      # 依赖文件
 ├── README_streamlit.md   # 本说明文件
+├── start_streamlit_app.sh # 启动脚本
 ├── snake/               # 贪吃蛇游戏文件
 │   ├── index.html
 │   ├── script.js

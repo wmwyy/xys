@@ -110,15 +110,15 @@ def snake_game():
 
     # 读取游戏文件
     try:
-        css_content = load_css("snake/style.css")
-        html_content = load_html("snake/index.html")
-        js_content = load_js("snake/script.js")
+        css_content = load_css("xyx/snake/style.css")
+        html_content = load_html("xyx/snake/index.html")
+        js_content = load_js("xyx/snake/script.js")
 
         # 将 snake 目录下的图片内联为 data-URL，避免 components.html 中的相对路径失效
         snake_image_map = {
-            'head.png': 'snake/head.png',
-            'food.png': 'snake/food.png',
-            'seed.png': 'snake/seed.png',
+            'head.png': 'xyx/snake/head.png',
+            'food.png': 'xyx/snake/food.png',
+            'seed.png': 'xyx/snake/seed.png',
         }
         for filename, path in snake_image_map.items():
             data_url = get_image_data_url(path)
@@ -155,20 +155,20 @@ def dds_game():
 
     # 读取游戏文件
     try:
-        css_content = load_css("dds/style.css")
-        html_content = load_html("dds/index.html")
-        js_content = load_js("dds/script.js")
+        css_content = load_css("xyx/dds/style.css")
+        html_content = load_html("xyx/dds/index.html")
+        js_content = load_js("xyx/dds/script.js")
 
         # 将 dds 目录下的图片内联为 data-URL（支持 mole1/mole2/head/seed）
         dds_candidates = {
-            './mole1.png': 'dds/mole1.png',
-            './mole2.png': 'dds/mole2.png',
-            'mole1.png': 'dds/mole1.png',
-            'mole2.png': 'dds/mole2.png',
-            './head.png': 'dds/head.png',
-            './seed.png': 'dds/seed.png',
-            'head.png': 'dds/head.png',
-            'seed.png': 'dds/seed.png',
+            './mole1.png': 'xyx/dds/mole1.png',
+            './mole2.png': 'xyx/dds/mole2.png',
+            'mole1.png': 'xyx/dds/mole1.png',
+            'mole2.png': 'xyx/dds/mole2.png',
+            './head.png': 'xyx/dds/head.png',
+            './seed.png': 'xyx/dds/seed.png',
+            'head.png': 'xyx/dds/head.png',
+            'seed.png': 'xyx/dds/seed.png',
         }
         for token, path in dds_candidates.items():
             data_url = get_image_data_url(path)
